@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Skill Exchange | Nexus Dashboard</title>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700&family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <div id="auth-section" class="glass-container auth-wrapper">
+        <h1 class="logo-text">Skill<span class="neon-text">Exchange</span></h1>
+        <p class="subtitle" id="auth-subtitle">Access the knowledge grid.</p>
+        
+        <form id="login-form" class="auth-form">
+            <div class="input-group"><input type="email" id="login-username" placeholder="Email Address" required></div>
+            <div class="input-group"><input type="password" id="login-password" placeholder="Password" required></div>
+            
+            <div class="error-msg" id="login-error" style="text-align: center; margin-bottom: 10px;">Invalid email or password.</div>
+
+            <button type="submit" class="neon-btn">Initialize Session</button>
+            <span class="toggle-link" id="go-to-register">New to the grid? Register here.</span>
+        </form>
+
+        <form id="register-form" class="auth-form hidden">
+            <div class="input-group"><input type="text" id="reg-name" placeholder="Full Name" required></div>
+            <div class="input-group">
+                <input type="email" id="reg-email" placeholder="Gmail / Email Address" required>
+                <div class="error-msg" id="email-error">Invalid email format.</div>
+            </div>
+            <div class="input-group">
+                <input type="tel" id="reg-mobile" placeholder="Mobile Number (10 digits)" required>
+                <div class="error-msg" id="mobile-error">Must be 10 digits.</div>
+            </div>
+            <div class="input-group"><input type="password" id="reg-password" placeholder="Password" required></div>
+            <div class="input-group">
+                <input type="password" id="reg-confirm-password" placeholder="Confirm Password" required>
+                <div class="error-msg" id="password-error">Passwords do not match.</div>
+            </div>
+            
+            <div class="input-group skills-input-wrapper">
+                <input type="text" id="reg-skill-input" placeholder="Type a skill (e.g., Python)">
+                <button type="button" id="add-skill-btn" class="outline-btn">Add</button>
+            </div>
+            <div id="skills-chip-container" class="skills-chips"></div>
+
+            <button type="submit" class="neon-btn">Create Account</button>
+            <span class="toggle-link" id="go-to-login">Already registered? Log in.</span>
+        </form>
+    </div>
+
+    <div id="main-app" class="hidden">
+        <nav class="glass-navbar">
+            <div class="nav-left">
+                <div class="avatar-container" id="profile-avatar-btn">
+                    <div class="avatar-circle" id="nav-avatar-initial">U</div>
+                </div>
+                <h1 class="logo-text desktop-only">Skill<span class="neon-text">Ex</span></h1>
+            </div>
+            <div class="nav-center">
+                <div class="search-wrapper">
+                    <input type="text" id="search-input" class="search-bar" placeholder="Search skills you want to learn...">
+                </div>
+            </div>
+            <div class="nav-right">
+                <button id="logout-btn" class="outline-btn outline-sm">Disconnect</button>
+            </div>
+        </nav>
+
+        <div id="profile-dropdown" class="glass-container profile-panel hidden">
+            <div class="profile-header">
+                <div class="avatar-circle large" id="panel-avatar-initial">U</div>
+                <div>
+                    <h3 id="panel-name">User Name</h3>
+                    <p class="text-muted" id="panel-email">user@email.com</p>
+                    <p class="text-muted" id="panel-mobile">+91 0000000000</p>
+                </div>
+            </div>
+            <hr class="glass-divider">
+            <div class="panel-section">
+                <h4>Your Skills</h4>
+                <div id="panel-skills-container" class="skills-chips small-chips"></div>
+            </div>
+            <button id="view-requests-btn" class="neon-btn full-width mt-10" style="margin-bottom: 10px;">View Skill Requests</button>
+            <button id="edit-profile-btn" class="outline-btn full-width">Edit Profile</button>
+        </div>
+
+        <main class="dashboard-layout">
+            <aside class="dashboard-sidebar">
+                <section class="glass-container sidebar-skills desktop-only">
+                    <h3>Your Arsenal</h3>
+                    <div id="sidebar-your-skills" class="skills-chips mt-10"></div>
+                </section>
+            </aside>
+
+            <section class="dashboard-feed">
+                <div class="feed-header">
+                    <h2 class="section-title text-left">Trending in the Grid</h2>
+                </div>
+                <div id="loading-state" class="skills-grid">
+                    <div class="skill-card skeleton"></div>
+                    <div class="skill-card skeleton"></div>
+                    <div class="skill-card skeleton"></div>
+                </div>
+                <div id="empty-state" class="hidden glass-container text-center mt-20">
+                    <h3 class="neon-text">No signals found.</h3>
+                    <p class="text-muted">Try searching for a different skill.</p>
+                </div>
+                <div id="skills-container" class="skills-grid hidden"></div>
+            </section>
+        </main>
+    </div>
+
+    <div id="requests-modal" class="modal-overlay hidden">
+        <div class="glass-container modal-content">
+            <h2 class="section-title">Incoming Signals</h2>
+            <div id="incoming-requests-container" class="requests-grid"></div>
+            <button id="close-requests-btn" class="outline-btn mt-20 full-width">Close Panel</button>
+        </div>
+    </div>
+
+    <div id="edit-profile-modal" class="modal-overlay hidden">
+        <div class="glass-container modal-content">
+            <h2 class="section-title">Edit Profile</h2>
+            <form id="edit-profile-form">
+                <div class="input-group"><input type="text" id="edit-name" placeholder="Full Name" required></div>
+                <div class="input-group"><input type="email" id="edit-email" placeholder="Email Address" required></div>
+                <div class="input-group"><input type="tel" id="edit-mobile" placeholder="Mobile Number" required></div>
+                <button type="submit" class="neon-btn full-width">Save Changes</button>
+                <button type="button" class="outline-btn mt-20 full-width" id="close-edit-profile-btn">Cancel</button>
+            </form>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
