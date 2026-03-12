@@ -1,0 +1,21 @@
+{
+  "name": "boka-app",
+  "version": "1.0.0",
+  "description": "Skill Exchange application with backend API and static frontend",
+  "main": "backend/server.js",
+  "scripts": {
+    "start": "node backend/server.js",
+    "backend": "cd backend && npm run dev",
+    "install-all": "cd backend && npm install"
+  },
+  "engines": {
+    "node": ">=14"
+  },
+  "dependencies": {
+    "cors": "^2.8.5",
+    "dotenv": "^16.0.3",
+    "express": "^4.18.2",
+    "mongoose": "^7.0.4",
+    "nodemailer": "^6.9.1"
+  }
+}

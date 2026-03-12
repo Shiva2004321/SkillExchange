@@ -355,5 +355,14 @@ app.put('/api/update-profile', async (req, res) => {
     }
 });
 
-const PORT = 5000;
-app.listen(PORT, () => console.log(`🚀 Server running on http://localhost:${PORT}`));
+// use environment port (Render sets PORT) or fallback to 5000
+const PORT = process.env.PORT || 5000;
+
+// serve the frontend when deployed
+const path = require('path');
+app.use(express.static(path.join(__dirname, '../frontend')));
+app.get('*', (req, res) => {
+    res.sendFile(path.join(__dirname, '../frontend/index.html'));
+});
+
+app.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));
