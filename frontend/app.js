@@ -84,7 +84,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 console.log("📝 Sending registration data:", { name, email, mobile, skills: regSkills });
                 
                 // Send data to backend to save in MongoDB
-                const response = await fetch("http://localhost:5000/api/register", {
+                const response = await fetch(`/api/register`, {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify({ name, email, mobile, password, skills: regSkills })
@@ -119,7 +119,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
         try {
             // Check credentials against MongoDB
-            const response = await fetch("http://localhost:5000/api/login", {
+            const response = await fetch(`/api/login`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ email, password })
@@ -171,7 +171,7 @@ document.addEventListener("DOMContentLoaded", () => {
     async function loadDashboardFeed() {
         loadingState.classList.remove("hidden"); skillsContainer.classList.add("hidden"); emptyState.classList.add("hidden");
         try {
-            const response = await fetch("http://localhost:5000/api/skills");
+            const response = await fetch(`/api/skills`);
             globalSkillsFeed = await response.json();
         } catch (error) { console.error("Backend offline."); }
         
@@ -216,7 +216,7 @@ document.addEventListener("DOMContentLoaded", () => {
         };
 
         try {
-            await fetch("http://localhost:5000/api/requests", {
+            await fetch(`/api/requests`, {
                 method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload)
             });
             alert(`Request sent to ${teacherData.user}! An email notification has been triggered.`);
@@ -229,7 +229,7 @@ document.addEventListener("DOMContentLoaded", () => {
         incomingRequestsContainer.innerHTML = "<p class='text-muted'>Scanning for signals...</p>";
 
         try {
-            const response = await fetch(`http://localhost:5000/api/requests/${currentUserProfile.email}`);
+            const response = await fetch(`/api/requests/${currentUserProfile.email}`);
             const requests = await response.json();
             renderIncomingRequests(requests);
         } catch (error) { incomingRequestsContainer.innerHTML = "<p class='error-msg'>Server offline.</p>"; }
@@ -257,7 +257,7 @@ document.addEventListener("DOMContentLoaded", () => {
         };
 
         try {
-            const response = await fetch("http://localhost:5000/api/update-profile", {
+            const response = await fetch(`/api/update-profile`, {
                 method: "PUT",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify(updatedProfile)
@@ -313,7 +313,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     async function processRequest(requestId, status) {
         try {
-            await fetch(`http://localhost:5000/api/requests/${requestId}`, {
+            await fetch(`/api/requests/${requestId}`, {
                 method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ status })
             });
             alert(`Request ${status}! Email sent to requester.`);
