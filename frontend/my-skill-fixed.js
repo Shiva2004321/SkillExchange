@@ -1,4 +1,4 @@
-function getQueryParam(name) {
+﻿function getQueryParam(name) {
     const params = new URLSearchParams(window.location.search);
     return params.get(name);
 }
@@ -124,12 +124,9 @@ async function loadSkillStats() {
             document.getElementById('average-rating').textContent = ratingData.averageRating.toFixed(1);
         }
 
-        // Load requests
-        const requestsResponse = await fetch(`/api/requests/count/${skillId}`);
-        if (requestsResponse.ok) {
-            const requestData = await requestsResponse.json();
-            document.getElementById('request-count').textContent = requestData.count;
-        }
+        // Load requests (this would need a new API endpoint)
+        // For now, we'll show 0
+        document.getElementById('request-count').textContent = '0';
 
     } catch (error) {
         console.error('Error loading skill stats:', error);
@@ -306,6 +303,7 @@ function loadDraft() {
         }
     }
 }
+
 function showError() {
     loadingState.style.display = 'none';
     skillDetail.style.display = 'none';

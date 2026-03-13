@@ -10,19 +10,19 @@ document.addEventListener("DOMContentLoaded", () => {
     const goToRegister = document.getElementById("go-to-register");
     const goToLogin = document.getElementById("go-to-login");
     const logoutBtn = document.getElementById("logout-btn");
-    
+
     const profileAvatarBtn = document.getElementById("profile-avatar-btn");
     const profileDropdown = document.getElementById("profile-dropdown");
     const searchInput = document.getElementById("search-input");
     const skillsContainer = document.getElementById("skills-container");
     const loadingState = document.getElementById("loading-state");
     const emptyState = document.getElementById("empty-state");
-    
+
     const viewRequestsBtn = document.getElementById("view-requests-btn");
     const requestsModal = document.getElementById("requests-modal");
     const closeRequestsBtn = document.getElementById("close-requests-btn");
     const incomingRequestsContainer = document.getElementById("incoming-requests-container");
-    
+
     const editProfileBtn = document.getElementById("edit-profile-btn");
     const editProfileModal = document.getElementById("edit-profile-modal");
     const editProfileForm = document.getElementById("edit-profile-form");
@@ -143,7 +143,7 @@ document.addEventListener("DOMContentLoaded", () => {
         if (isValid && regSkills.length > 0) {
             try {
                 console.log("📝 Sending registration data:", { name, email, mobile, skills: regSkills });
-                
+
                 // Send data to backend to save in MongoDB
                 const response = await fetch(`/api/register`, {
                     method: "POST",
@@ -156,7 +156,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
                 if (response.ok) {
                     alert("✅ Account created successfully! Please log in.");
-                    registerForm.reset(); regSkills = []; renderRegChips(); goToLogin.click(); 
+                    registerForm.reset(); regSkills = []; renderRegChips(); goToLogin.click();
                 } else {
                     alert("❌ Registration Failed:\n" + data.message);
                 }
@@ -175,7 +175,7 @@ document.addEventListener("DOMContentLoaded", () => {
         const email = document.getElementById("login-username").value;
         const password = document.getElementById("login-password").value;
         const loginError = document.getElementById("login-error");
-        
+
         loginError.style.display = "none"; // Hide error initially
 
         try {
@@ -195,13 +195,13 @@ document.addEventListener("DOMContentLoaded", () => {
                 localStorage.setItem('user', JSON.stringify(data.user));
                 currentUserProfile = data.user;
                 updateProfileUI();
-                
+
                 // Join Socket.io room for notifications
                 socket.emit('join', currentUserProfile.email);
-                
+
                 authSection.classList.add("hidden");
                 mainApp.classList.remove("hidden");
-                loadDashboardFeed(); 
+                loadDashboardFeed();
             } else {
                 // Login Failed! Show error and block entry
                 loginError.textContent = data.message;
@@ -237,7 +237,7 @@ document.addEventListener("DOMContentLoaded", () => {
         document.getElementById("panel-email").textContent = currentUserProfile.email;
         document.getElementById("panel-mobile").textContent = currentUserProfile.mobile || "+91 0000000000";
 
-        const skillsHTML = currentUserProfile.skills.length > 0 
+        const skillsHTML = currentUserProfile.skills.length > 0
             ? currentUserProfile.skills.map(s => `<div class="chip">${s}</div>`).join('')
             : `<p class="text-muted">No skills added.</p>`;
         document.getElementById("panel-skills-container").innerHTML = skillsHTML;
@@ -250,7 +250,7 @@ document.addEventListener("DOMContentLoaded", () => {
             const response = await fetch(`/api/skills`);
             globalSkillsFeed = await response.json();
         } catch (error) { console.error("Backend offline."); }
-        
+
         setTimeout(() => { renderFeed(globalSkillsFeed); loadingState.classList.add("hidden"); skillsContainer.classList.remove("hidden"); }, 800);
     }
 
@@ -258,19 +258,19 @@ document.addEventListener("DOMContentLoaded", () => {
         // Separate user's own skills from others
         const userSkills = skillsArray.filter(item => item.email === currentUserProfile.email);
         const otherSkills = skillsArray.filter(item => item.email !== currentUserProfile.email);
-        
+
         skillsContainer.innerHTML = "";
-        
+
         // Show user's own skills first
         if (userSkills.length > 0) {
             const userSkillsSection = document.createElement("div");
             userSkillsSection.innerHTML = `<h3 style="color: var(--neon-cyan); margin-bottom: 15px; font-size: 1.1rem;">Your Skills</h3>`;
-            
+
             for (const item of userSkills) {
-                const card = document.createElement("div"); 
+                const card = document.createElement("div");
                 card.className = "skill-card";
                 card.style.borderColor = "var(--neon-purple)";
-                
+
                 // Fetch ratings for this skill
                 let ratingInfo = { averageRating: 0, ratings: [] };
                 try {
@@ -279,9 +279,9 @@ document.addEventListener("DOMContentLoaded", () => {
                 } catch (error) {
                     console.error('Error fetching ratings:', error);
                 }
-                
+
                 const stars = '★'.repeat(Math.round(ratingInfo.averageRating)) + '☆'.repeat(5 - Math.round(ratingInfo.averageRating));
-                
+
                 card.innerHTML = `
                     <div>
                         <h3>${item.skill}</h3>
@@ -293,28 +293,28 @@ document.addEventListener("DOMContentLoaded", () => {
                         </div>
                     </div>
                 `;
-                
+
                 const buttonContainer = document.createElement("div");
                 buttonContainer.className = "button-container";
-                
+
                 const editBtn = document.createElement("button");
                 editBtn.textContent = "Edit";
                 editBtn.onclick = () => window.location.href = `my-skill.html?skillId=${item._id}&action=edit`;
                 buttonContainer.appendChild(editBtn);
-                
+
                 const viewBtn = document.createElement("button");
                 viewBtn.textContent = "View Details";
                 viewBtn.className = "outline-btn";
                 viewBtn.onclick = () => window.location.href = `skill.html?skillId=${item._id}`;
                 buttonContainer.appendChild(viewBtn);
-                
+
                 card.appendChild(buttonContainer);
                 userSkillsSection.appendChild(card);
             }
-            
+
             skillsContainer.appendChild(userSkillsSection);
         }
-        
+
         // Show other people's skills
         if (otherSkills.length > 0) {
             if (userSkills.length > 0) {
@@ -322,7 +322,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 divider.style.borderColor = "var(--glass-border)";
                 divider.style.margin = "30px 0";
                 skillsContainer.appendChild(divider);
-                
+
                 const otherSkillsHeader = document.createElement("h3");
                 otherSkillsHeader.textContent = "Available Skills";
                 otherSkillsHeader.style.color = "var(--neon-cyan)";
@@ -330,10 +330,10 @@ document.addEventListener("DOMContentLoaded", () => {
                 otherSkillsHeader.style.fontSize = "1.1rem";
                 skillsContainer.appendChild(otherSkillsHeader);
             }
-            
+
             for (const item of otherSkills) {
                 const card = document.createElement("div"); card.className = "skill-card";
-                
+
                 // Fetch ratings for this skill
                 let ratingInfo = { averageRating: 0, ratings: [] };
                 try {
@@ -342,9 +342,9 @@ document.addEventListener("DOMContentLoaded", () => {
                 } catch (error) {
                     console.error('Error fetching ratings:', error);
                 }
-                
+
                 const stars = '★'.repeat(Math.round(ratingInfo.averageRating)) + '☆'.repeat(5 - Math.round(ratingInfo.averageRating));
-                
+
                 card.innerHTML = `
                     <div>
                         <h3>${item.skill}</h3>
@@ -356,33 +356,33 @@ document.addEventListener("DOMContentLoaded", () => {
                         </div>
                     </div>
                 `;
-                
+
                 const buttonContainer = document.createElement("div");
                 buttonContainer.className = "button-container";
-                
+
                 const reqBtn = document.createElement("button");
                 reqBtn.textContent = "Request to Learn";
                 reqBtn.onclick = () => window.location.href = `skill.html?skillId=${item._id}`;
                 buttonContainer.appendChild(reqBtn);
-                
+
                 const rateBtn = document.createElement("button");
                 rateBtn.textContent = "Rate Skill";
                 rateBtn.className = "outline-btn";
                 rateBtn.onclick = () => showRatingModal(item);
                 buttonContainer.appendChild(rateBtn);
-                
+
                 card.appendChild(buttonContainer);
                 skillsContainer.appendChild(card);
             }
         }
-        
+
         if (userSkills.length === 0 && otherSkills.length === 0) {
-            skillsContainer.classList.add("hidden"); 
-            emptyState.classList.remove("hidden"); 
-            return; 
+            skillsContainer.classList.add("hidden");
+            emptyState.classList.remove("hidden");
+            return;
         }
-        
-        emptyState.classList.add("hidden"); 
+
+        emptyState.classList.add("hidden");
         skillsContainer.classList.remove("hidden");
     }
 
@@ -393,6 +393,7 @@ document.addEventListener("DOMContentLoaded", () => {
         }
 
         const payload = {
+            skillId: teacherData._id,
             requesterName: currentUserProfile.name,
             requesterEmail: currentUserProfile.email,
             skillName: teacherData.skill,
@@ -527,14 +528,14 @@ document.addEventListener("DOMContentLoaded", () => {
                 const newSkill = await response.json();
                 alert("✅ Skill added successfully!");
                 addSkillModal.classList.add("hidden");
-                
+
                 // Update user's skills list
                 if (!currentUserProfile.skills.includes(skillName)) {
                     currentUserProfile.skills.push(skillName);
                     localStorage.setItem('user', JSON.stringify(currentUserProfile));
                     updateProfileUI();
                 }
-                
+
                 // Refresh the feed to show the new skill
                 loadDashboardFeed();
             } else {
@@ -603,10 +604,10 @@ document.addEventListener("DOMContentLoaded", () => {
                 <p class="text-muted">Date: ${req.date}</p>
                 <span class="badge ${req.status}">${req.status}</span>
             `;
-            
+
             if (req.status === 'pending') {
                 const actionDiv = document.createElement("div"); actionDiv.className = "request-actions";
-                
+
                 const acceptBtn = document.createElement("button");
                 acceptBtn.className = "outline-btn outline-sm"; acceptBtn.textContent = "Accept";
                 acceptBtn.style.borderColor = "#2ecc71"; acceptBtn.style.color = "#2ecc71";
@@ -755,10 +756,10 @@ document.addEventListener("DOMContentLoaded", () => {
             const chatItem = document.createElement("div");
             chatItem.className = "chat-item";
             chatItem.onclick = () => openChat(user);
-            
+
             const avatarInitial = user.name.charAt(0).toUpperCase();
             const lastMessage = user.lastMessage || "No messages yet";
-            
+
             chatItem.innerHTML = `
                 <div class="avatar-circle">${avatarInitial}</div>
                 <div class="chat-info">
@@ -839,9 +840,9 @@ document.addEventListener("DOMContentLoaded", () => {
 
     // Socket.io chat message listener
     socket.on('chat message', (data) => {
-        if (currentChatUser && 
+        if (currentChatUser &&
             ((data.sender === currentChatUser.email && data.receiver === currentUserProfile.email) ||
-             (data.sender === currentUserProfile.email && data.receiver === currentChatUser.email))) {
+                (data.sender === currentUserProfile.email && data.receiver === currentChatUser.email))) {
             loadMessages(); // Refresh current chat
         }
         loadChatUsers(); // Refresh chat list for last messages
@@ -888,14 +889,14 @@ document.addEventListener("DOMContentLoaded", () => {
         notifications.forEach(notification => {
             const notificationItem = document.createElement("div");
             notificationItem.className = `notification-item ${notification.read ? '' : 'unread'}`;
-            
+
             const timeAgo = new Date(notification.createdAt).toLocaleDateString();
-            
+
             notificationItem.innerHTML = `
                 <div class="notification-text">${notification.message}</div>
                 <div class="notification-time">${timeAgo}</div>
             `;
-            
+
             notificationItem.onclick = () => markAsRead(notification._id);
             notificationsList.appendChild(notificationItem);
         });
@@ -919,12 +920,12 @@ document.addEventListener("DOMContentLoaded", () => {
         if (Notification.permission === 'granted') {
             new Notification('Skill Exchange', { body: data.message });
         }
-        
+
         // Reload notifications if panel is open
         if (!notificationsPanel.classList.contains("hidden")) {
             loadNotifications();
         }
-        
+
         // Update notification button to show indicator
         notificationsBtn.innerHTML = '🔔 <span style="color: #ff4757; font-size: 0.8em;">●</span>';
     });

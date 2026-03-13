@@ -102,7 +102,12 @@ const Skill = mongoose.model('Skill', skillSchema);
 
 // 3. Request Schema
 const requestSchema = new mongoose.Schema({
-    requesterName: String, requesterEmail: String, skillName: String, teacherName: String, teacherEmail: String,
+    skillId: { type: mongoose.Schema.Types.ObjectId, ref: 'Skill' },
+    requesterName: String, 
+    requesterEmail: String, 
+    skillName: String, 
+    teacherName: String, 
+    teacherEmail: String,
     status: { type: String, default: 'pending' },
     date: { type: String, default: () => new Date().toLocaleDateString() }
 });
@@ -567,6 +572,15 @@ app.post('/api/requests', async (req, res) => {
 
         res.json({ message: "Request sent successfully!", data: newRequest });
     } catch (error) { res.status(500).json({ message: "Error sending request" }); }
+});
+
+app.get('/api/requests/count/:id', async (req, res) => {
+    try {
+        const count = await Request.countDocuments({ skillId: req.params.id });
+        res.json({ count });
+    } catch (error) {
+        res.status(500).json({ message: "Error fetching request count" });
+    }
 });
 
 app.get('/api/requests/:email', async (req, res) => {

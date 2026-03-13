@@ -119,6 +119,7 @@ async function loadSkill() {
 
             try {
                 const payload = {
+                    skillId: skill._id,
                     requesterName: currentUser.name,
                     requesterEmail: currentUser.email,
                     skillName: skill.skill,
