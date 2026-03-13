@@ -11,6 +11,7 @@ const profileInitial = document.getElementById('profile-initial');
 const profileSkills = document.getElementById('profile-skills');
 const profileLinks = document.getElementById('profile-links');
 const profileMessage = document.getElementById('profile-message');
+const profileBioContent = document.getElementById('profile-bio-content');
 const telegramBtn = document.getElementById('telegram-btn');
 
 const storedUser = localStorage.getItem('user');
@@ -25,6 +26,24 @@ function createLinkButton(label, url) {
     btn.style.marginRight = '10px';
     btn.textContent = label;
     return btn;
+}
+
+function simpleMarkdownToHtml(markdown) {
+    if (!markdown) return '<em>No bio yet.</em>';
+    
+    // Basic markdown parsing
+    let html = markdown
+        .replace(/^### (.*$)/gim, '<h3>$1</h3>')
+        .replace(/^## (.*$)/gim, '<h2>$1</h2>')
+        .replace(/^# (.*$)/gim, '<h1>$1</h1>')
+        .replace(/\*\*(.*)\*\*/gim, '<strong>$1</strong>')
+        .replace(/\*(.*)\*/gim, '<em>$1</em>')
+        .replace(/!\[([^\]]*)\]\(([^)]*)\)/gim, '<img alt="$1" src="$2" />')
+        .replace(/\[([^\]]*)\]\(([^)]*)\)/gim, '<a href="$2" target="_blank">$1</a>')
+        .replace(/\n\n/gim, '</p><p>')
+        .replace(/\n/gim, '<br>');
+    
+    return '<p>' + html + '</p>';
 }
 
 async function loadProfile() {
@@ -71,8 +90,14 @@ async function loadProfile() {
             profileLinks.appendChild(createLinkButton('Telegram', `https://t.me/${t}`));
         }
 
+        profileBioContent.innerHTML = simpleMarkdownToHtml(user.profileMarkdown);
+
         if (currentUser && currentUser.email === user.email) {
             profileMessage.textContent = 'This is your public profile. Update details from the main dashboard.';
+            document.getElementById('edit-profile-section').style.display = 'block';
+            document.getElementById('edit-profile-link').onclick = () => {
+                window.location.href = 'index.html';
+            };
         } else {
             profileMessage.textContent = 'You can connect with this user using the links above.';
         }

@@ -38,7 +38,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const detailRequestBtn = document.getElementById("detail-request-btn");
     let currentSkillDetail = null;
 
-    let currentUserProfile = { name: "", email: "", mobile: "", skills: [], github: '', linkedin: '', telegram: '' };
+    let currentUserProfile = { name: "", email: "", mobile: "", skills: [], github: '', linkedin: '', telegram: '', profileMarkdown: '' };
     let globalSkillsFeed = [];
     let token = localStorage.getItem('token');
 
@@ -46,6 +46,25 @@ document.addEventListener("DOMContentLoaded", () => {
     const storedUser = localStorage.getItem('user');
     if (storedUser) {
         try { currentUserProfile = JSON.parse(storedUser); } catch (e) { console.warn('Failed to parse stored user', e); }
+    }
+
+    // URL validation and formatting functions
+    function formatUrl(url) {
+        if (!url) return '';
+        url = url.trim();
+        if (!url.startsWith('http://') && !url.startsWith('https://')) {
+            url = 'https://' + url;
+        }
+        return url;
+    }
+
+    function isValidUrl(url) {
+        try {
+            new URL(url);
+            return true;
+        } catch {
+            return false;
+        }
     }
 
     // If already logged in, show dashboard immediately
@@ -100,8 +119,8 @@ document.addEventListener("DOMContentLoaded", () => {
         const name = document.getElementById("reg-name").value;
         const email = document.getElementById("reg-email").value;
         const mobile = document.getElementById("reg-mobile").value;
-        const github = document.getElementById("reg-github").value;
-        const linkedin = document.getElementById("reg-linkedin").value;
+        const github = formatUrl(document.getElementById("reg-github").value);
+        const linkedin = formatUrl(document.getElementById("reg-linkedin").value);
         const telegram = document.getElementById("reg-telegram").value;
         const password = document.getElementById("reg-password").value;
         const confirmPassword = document.getElementById("reg-confirm-password").value;
@@ -110,6 +129,8 @@ document.addEventListener("DOMContentLoaded", () => {
         let isValid = true;
         if (!/^[0-9]{10}$/.test(mobile)) { document.getElementById("mobile-error").style.display = "block"; isValid = false; }
         if (password !== confirmPassword) { document.getElementById("password-error").style.display = "block"; isValid = false; }
+        if (github && !isValidUrl(github)) { alert("Invalid GitHub URL"); isValid = false; }
+        if (linkedin && !isValidUrl(linkedin)) { alert("Invalid LinkedIn URL"); isValid = false; }
 
         if (isValid && regSkills.length > 0) {
             try {
@@ -362,6 +383,7 @@ document.addEventListener("DOMContentLoaded", () => {
         document.getElementById("edit-github").value = currentUserProfile.github || "";
         document.getElementById("edit-linkedin").value = currentUserProfile.linkedin || "";
         document.getElementById("edit-telegram").value = currentUserProfile.telegram || "";
+        document.getElementById("edit-profile-markdown").value = currentUserProfile.profileMarkdown || "";
     });
 
     closeEditProfileBtn.addEventListener("click", () => editProfileModal.classList.add("hidden"));
@@ -372,10 +394,21 @@ document.addEventListener("DOMContentLoaded", () => {
             email: currentUserProfile.email.toLowerCase(),
             name: document.getElementById("edit-name").value,
             mobile: document.getElementById("edit-mobile").value,
-            github: document.getElementById("edit-github").value,
-            linkedin: document.getElementById("edit-linkedin").value,
-            telegram: document.getElementById("edit-telegram").value
+            github: formatUrl(document.getElementById("edit-github").value),
+            linkedin: formatUrl(document.getElementById("edit-linkedin").value),
+            telegram: document.getElementById("edit-telegram").value,
+            profileMarkdown: document.getElementById("edit-profile-markdown").value
         };
+
+        // Validate URLs
+        if (updatedProfile.github && !isValidUrl(updatedProfile.github)) {
+            alert("Invalid GitHub URL");
+            return;
+        }
+        if (updatedProfile.linkedin && !isValidUrl(updatedProfile.linkedin)) {
+            alert("Invalid LinkedIn URL");
+            return;
+        }
 
         try {
             const response = await fetch(`/api/update-profile`, {

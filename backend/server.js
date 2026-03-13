@@ -62,6 +62,7 @@ const userSchema = new mongoose.Schema({
     github: { type: String, default: '' },
     linkedin: { type: String, default: '' },
     telegram: { type: String, default: '' },
+    profileMarkdown: { type: String, default: '' },
     createdAt: { type: Date, default: Date.now }
 });
 
@@ -436,6 +437,7 @@ app.post('/api/login', async (req, res) => {
                 github: user.github || '',
                 linkedin: user.linkedin || '',
                 telegram: user.telegram || '',
+                profileMarkdown: user.profileMarkdown || '',
                 role: user.role
             }
         });
@@ -545,13 +547,13 @@ app.patch('/api/requests/:id', async (req, res) => {
 // --- UPDATE PROFILE ---
 app.put('/api/update-profile', async (req, res) => {
     try {
-        const { email, name, mobile, github, linkedin, telegram } = req.body;
+        const { email, name, mobile, github, linkedin, telegram, profileMarkdown } = req.body;
         
         console.log("Update request received for email:", email);
         
         const updatedUser = await User.findOneAndUpdate(
             { email: email.toLowerCase() },
-            { $set: { name: name, mobile: mobile, github: github || '', linkedin: linkedin || '', telegram: telegram || '' } },
+            { $set: { name: name, mobile: mobile, github: github || '', linkedin: linkedin || '', telegram: telegram || '', profileMarkdown: profileMarkdown || '' } },
             { new: true }
         );
 
@@ -570,7 +572,8 @@ app.put('/api/update-profile', async (req, res) => {
                 skills: updatedUser.skills,
                 github: updatedUser.github || '',
                 linkedin: updatedUser.linkedin || '',
-                telegram: updatedUser.telegram || ''
+                telegram: updatedUser.telegram || '',
+                profileMarkdown: updatedUser.profileMarkdown || ''
             }
         });
     } catch (error) {
