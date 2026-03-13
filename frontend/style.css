@@ -209,3 +209,240 @@ input:focus { border-color: var(--neon-cyan); box-shadow: 0 0 10px rgba(0, 242, 
     transform: scale(1.1);
     box-shadow: 0 6px 16px rgba(0, 242, 254, 0.6);
 }
+
+/* Dashboard Layout */
+.dashboard-layout {
+    display: grid;
+    grid-template-columns: 300px 1fr;
+    gap: 30px;
+    padding: 20px;
+    max-width: 1400px;
+    margin: 0 auto;
+}
+
+.dashboard-sidebar {
+    position: sticky;
+    top: 20px;
+    height: fit-content;
+}
+
+.dashboard-main {
+    min-height: 60vh;
+}
+
+.dashboard-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 30px;
+}
+
+.dashboard-header h2 {
+    color: var(--neon-cyan);
+    font-size: 1.8rem;
+}
+
+.dashboard-actions {
+    display: flex;
+    gap: 15px;
+}
+
+.skills-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    gap: 20px;
+}
+
+.skill-card {
+    background: var(--glass-bg);
+    backdrop-filter: blur(16px);
+    border: 1px solid var(--glass-border);
+    border-radius: 16px;
+    padding: 20px;
+    transition: all 0.3s ease;
+    cursor: pointer;
+}
+
+.skill-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 12px 40px rgba(0, 242, 254, 0.2);
+    border-color: var(--neon-cyan);
+}
+
+.skill-card h3 {
+    color: var(--neon-cyan);
+    margin-bottom: 8px;
+    font-size: 1.2rem;
+}
+
+.skill-card .instructor {
+    color: var(--text-muted);
+    font-size: 0.9rem;
+    margin-bottom: 10px;
+}
+
+.skill-card .desc {
+    color: var(--text-main);
+    margin-bottom: 15px;
+    line-height: 1.5;
+}
+
+.loading-state {
+    text-align: center;
+    padding: 60px 20px;
+}
+
+.loading-spinner {
+    width: 40px;
+    height: 40px;
+    border: 3px solid var(--glass-border);
+    border-top: 3px solid var(--neon-cyan);
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    margin: 0 auto 20px;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+.empty-state {
+    text-align: center;
+    padding: 60px 20px;
+}
+
+.empty-state h3 {
+    color: var(--neon-cyan);
+    margin-bottom: 10px;
+}
+
+.empty-state p {
+    color: var(--text-muted);
+    margin-bottom: 20px;
+}
+
+/* Skill Management */
+.skill-management-actions {
+    margin-bottom: 20px;
+}
+
+.skill-edit-item {
+    transition: background 0.3s ease;
+}
+
+.skill-edit-item:hover {
+    background: rgba(255, 255, 255, 0.05) !important;
+}
+
+.skill-edit-item button {
+    padding: 4px 8px;
+    font-size: 0.8rem;
+}
+
+/* Skill Detail Page */
+.skill-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.skill-header h2 {
+    color: var(--neon-cyan);
+}
+
+.skill-detail-content {
+    display: grid;
+    grid-template-columns: 1fr 300px;
+    gap: 30px;
+}
+
+.skill-info h4 {
+    color: var(--neon-cyan);
+    margin-bottom: 15px;
+}
+
+.skill-actions {
+    background: rgba(255, 255, 255, 0.02);
+    padding: 20px;
+    border-radius: 12px;
+    border: 1px solid var(--glass-border);
+}
+
+.skill-stats {
+    margin-top: 30px;
+}
+
+.stat-item {
+    text-align: center;
+}
+
+.stat-number {
+    font-size: 1.8rem;
+    font-weight: bold;
+    color: var(--neon-purple);
+    display: block;
+}
+
+.stat-label {
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    margin-top: 5px;
+}
+
+/* Modal Enhancements */
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    padding-bottom: 15px;
+    border-bottom: 1px solid var(--glass-border);
+}
+
+.modal-header h2 {
+    color: var(--neon-cyan);
+}
+
+/* Responsive Design */
+@media (max-width: 1024px) {
+    .dashboard-layout {
+        grid-template-columns: 1fr;
+        gap: 20px;
+    }
+
+    .dashboard-sidebar {
+        position: static;
+    }
+
+    .desktop-only {
+        display: none;
+    }
+}
+
+@media (max-width: 768px) {
+    .dashboard-layout {
+        padding: 15px;
+    }
+
+    .skills-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .skill-detail-content {
+        grid-template-columns: 1fr;
+        gap: 20px;
+    }
+
+    .dashboard-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 15px;
+    }
+
+    .dashboard-actions {
+        width: 100%;
+        justify-content: flex-end;
+    }
+}

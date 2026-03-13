@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Manage Skill | SkillExchange</title>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700&family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <nav class="glass-navbar">
+        <div class="nav-left">
+            <a href="index.html" class="outline-btn outline-sm">← Back to Dashboard</a>
+            <h1 class="logo-text desktop-only">Skill<span class="neon-text">Ex</span></h1>
+        </div>
+        <div class="nav-right">
+            <a href="profile.html?email=${encodeURIComponent(currentUser?.email || '')}" class="outline-btn outline-sm">My Profile</a>
+        </div>
+    </nav>
+
+    <main class="dashboard-layout" style="grid-template-columns: 1fr; max-width: 900px; margin: 40px auto;">
+        <section class="glass-container" id="skill-detail" style="padding: 24px;">
+            <div class="skill-header">
+                <h2 id="skill-title">Manage Skill</h2>
+                <div id="skill-actions">
+                    <button id="save-skill-btn" class="neon-btn">Save Changes</button>
+                    <button id="delete-skill-btn" class="outline-btn" style="border-color: #e74c3c; color: #e74c3c; display: none;">Delete Skill</button>
+                </div>
+            </div>
+
+            <hr class="glass-divider">
+
+            <form id="skill-form">
+                <div class="input-group">
+                    <label for="skill-name-input" style="color: var(--neon-cyan); font-size: 0.9rem; margin-bottom: 5px; display: block;">Skill Name *</label>
+                    <input type="text" id="skill-name-input" placeholder="e.g., Python Programming, Web Development" required>
+                </div>
+
+                <div class="input-group">
+                    <label for="skill-description-input" style="color: var(--neon-cyan); font-size: 0.9rem; margin-bottom: 5px; display: block;">Description *</label>
+                    <textarea id="skill-description-input" placeholder="Describe what you can teach about this skill. Be specific about your experience, teaching style, and what students can expect to learn..." rows="6" required></textarea>
+                </div>
+
+                <div class="input-group">
+                    <label for="skill-category-select" style="color: var(--neon-cyan); font-size: 0.9rem; margin-bottom: 5px; display: block;">Category *</label>
+                    <select id="skill-category-select" required>
+                        <option value="">Select Category</option>
+                        <option value="programming">Programming</option>
+                        <option value="design">Design</option>
+                        <option value="marketing">Marketing</option>
+                        <option value="business">Business</option>
+                        <option value="languages">Languages</option>
+                        <option value="music">Music</option>
+                        <option value="sports">Sports</option>
+                        <option value="other">Other</option>
+                    </select>
+                </div>
+
+                <div class="input-group">
+                    <label for="skill-tags-input" style="color: var(--neon-cyan); font-size: 0.9rem; margin-bottom: 5px; display: block;">Tags (optional)</label>
+                    <input type="text" id="skill-tags-input" placeholder="e.g., beginner, advanced, python, web, tools (comma separated)">
+                    <small style="color: var(--text-muted); font-size: 0.8rem;">Tags help others find your skill</small>
+                </div>
+
+                <div class="input-group">
+                    <label for="skill-experience" style="color: var(--neon-cyan); font-size: 0.9rem; margin-bottom: 5px; display: block;">Experience Level</label>
+                    <select id="skill-experience">
+                        <option value="beginner">Beginner Friendly</option>
+                        <option value="intermediate">Intermediate</option>
+                        <option value="advanced">Advanced</option>
+                        <option value="expert">Expert Level</option>
+                    </select>
+                </div>
+
+                <div class="input-group">
+                    <label for="skill-price" style="color: var(--neon-cyan); font-size: 0.9rem; margin-bottom: 5px; display: block;">Pricing (optional)</label>
+                    <input type="text" id="skill-price" placeholder="e.g., Free, $20/hour, Negotiable">
+                </div>
+
+                <div class="input-group">
+                    <label for="skill-availability" style="color: var(--neon-cyan); font-size: 0.9rem; margin-bottom: 5px; display: block;">Availability</label>
+                    <textarea id="skill-availability" placeholder="When are you available to teach? e.g., Weekends, Evenings, Flexible schedule..." rows="3"></textarea>
+                </div>
+            </form>
+
+            <div id="skill-stats" style="margin-top: 30px; padding: 20px; background: rgba(255,255,255,0.02); border-radius: 8px; display: none;">
+                <h4>Skill Statistics</h4>
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 15px; margin-top: 15px;">
+                    <div class="stat-item">
+                        <span class="stat-number" id="rating-count">0</span>
+                        <span class="stat-label">Reviews</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-number" id="average-rating">0.0</span>
+                        <span class="stat-label">Average Rating</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-number" id="request-count">0</span>
+                        <span class="stat-label">Requests</span>
+                    </div>
+                </div>
+            </div>
+
+            <div id="loading-state" class="text-center" style="display: none;">
+                <p>Loading skill details...</p>
+            </div>
+
+            <div id="error-state" class="text-center" style="display: none;">
+                <p class="text-muted">Skill not found or you don't have permission to edit this skill.</p>
+                <a href="index.html" class="neon-btn">Back to Dashboard</a>
+            </div>
+        </section>
+    </main>
+
+    <!-- Floating Back Button -->
+    <button id="floating-back-btn" class="floating-btn" onclick="window.location.href='index.html'">←</button>
+
+    <script src="my-skill.js"></script>
+</body>
+</html></content>
+<parameter name="filePath">c:\Users\samad shaikh\OneDrive\Desktop\boka\frontend\my-skill.html

@@ -34,8 +34,20 @@
             <div id="profile-links" style="display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 16px;"></div>
 
             <div>
-                <h4>Skills</h4>
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                    <h4>Skills</h4>
+                    <button id="manage-skills-btn" class="outline-btn outline-sm" style="display: none;">Manage Skills</button>
+                </div>
                 <div id="profile-skills" class="skills-chips mt-10"></div>
+            </div>
+
+            <div id="skill-management-section" style="margin-top: 20px; display: none;">
+                <h4>Manage Your Skills</h4>
+                <div class="skill-management-actions" style="margin-top: 10px;">
+                    <button id="add-new-skill-btn" class="neon-btn">+ Add New Skill</button>
+                    <button id="edit-existing-skills-btn" class="outline-btn">Edit Existing Skills</button>
+                </div>
+                <div id="skill-list-container" style="margin-top: 15px;"></div>
             </div>
 
             <div id="profile-bio" style="margin-top: 20px;">

@@ -90,7 +90,13 @@ const skillSchema = new mongoose.Schema({
     email: String,
     skill: String,
     desc: String,
-    createdAt: { type: Date, default: Date.now }
+    category: { type: String, default: 'other' },
+    tags: { type: [String], default: [] },
+    experience: { type: String, default: 'beginner' },
+    price: { type: String, default: '' },
+    availability: { type: String, default: '' },
+    createdAt: { type: Date, default: Date.now },
+    updatedAt: { type: Date, default: Date.now }
 });
 const Skill = mongoose.model('Skill', skillSchema);
 
@@ -479,10 +485,72 @@ app.get('/api/skills/:id', async (req, res) => {
 
 app.post('/api/skills', async (req, res) => {
     try {
-        const newSkill = new Skill({ user: req.body.user, email: req.body.email, skill: req.body.skill, desc: req.body.desc });
+        const { user, email, skill, desc, category, tags, experience, price, availability } = req.body;
+        const newSkill = new Skill({
+            user,
+            email,
+            skill,
+            desc,
+            category: category || 'other',
+            tags: Array.isArray(tags) ? tags : [],
+            experience: experience || 'beginner',
+            price: price || '',
+            availability: availability || ''
+        });
         await newSkill.save();
         res.json({ message: "Skill added successfully!", data: newSkill });
     } catch (error) { res.status(500).json({ message: "Error saving skill" }); }
+});
+
+// Update a skill
+app.put('/api/skills/:id', async (req, res) => {
+    try {
+        const { user, email, skill, desc, category, tags, experience, price, availability } = req.body;
+        const updatedSkill = await Skill.findByIdAndUpdate(
+            req.params.id,
+            {
+                $set: {
+                    skill,
+                    desc,
+                    category: category || 'other',
+                    tags: Array.isArray(tags) ? tags : [],
+                    experience: experience || 'beginner',
+                    price: price || '',
+                    availability: availability || '',
+                    updatedAt: new Date()
+                }
+            },
+            { new: true }
+        );
+
+        if (!updatedSkill) {
+            return res.status(404).json({ message: "Skill not found" });
+        }
+
+        res.json({ message: "Skill updated successfully!", data: updatedSkill });
+    } catch (error) {
+        console.error("Error updating skill:", error);
+        res.status(500).json({ message: "Error updating skill" });
+    }
+});
+
+// Delete a skill
+app.delete('/api/skills/:id', async (req, res) => {
+    try {
+        const deletedSkill = await Skill.findByIdAndDelete(req.params.id);
+
+        if (!deletedSkill) {
+            return res.status(404).json({ message: "Skill not found" });
+        }
+
+        // Also delete associated ratings
+        await Rating.deleteMany({ skillId: req.params.id });
+
+        res.json({ message: "Skill deleted successfully!" });
+    } catch (error) {
+        console.error("Error deleting skill:", error);
+        res.status(500).json({ message: "Error deleting skill" });
+    }
 });
 
 app.post('/api/requests', async (req, res) => {

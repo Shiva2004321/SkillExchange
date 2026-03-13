@@ -73,6 +73,38 @@
             </div>
         </nav>
 
+        <main class="dashboard-layout">
+            <aside class="dashboard-sidebar">
+                <section class="glass-container sidebar-skills desktop-only">
+                    <h3>Your Arsenal</h3>
+                    <div id="sidebar-your-skills" class="skills-chips mt-10"></div>
+                    <button id="add-skill-btn" class="neon-btn full-width mt-20">+ Add Skill</button>
+                </section>
+            </aside>
+
+            <section class="dashboard-main">
+                <div class="dashboard-header">
+                    <h2>Available Skills</h2>
+                    <div class="dashboard-actions">
+                        <button id="refresh-feed-btn" class="outline-btn outline-sm">🔄 Refresh</button>
+                    </div>
+                </div>
+
+                <div id="loading-state" class="loading-state">
+                    <div class="loading-spinner"></div>
+                    <p>Scanning the knowledge grid...</p>
+                </div>
+
+                <div id="empty-state" class="empty-state hidden">
+                    <h3>No skills found</h3>
+                    <p>Be the first to share your knowledge!</p>
+                    <button id="add-first-skill-btn" class="neon-btn">Add Your First Skill</button>
+                </div>
+
+                <div id="skills-container" class="skills-grid"></div>
+            </section>
+        </main>
+
         <div id="profile-dropdown" class="glass-container profile-panel hidden">
             <div class="profile-header">
                 <div class="avatar-circle large" id="panel-avatar-initial">U</div>
@@ -204,6 +236,42 @@
                 </div>
                 <button type="submit" class="neon-btn full-width">Save Changes</button>
                 <button type="button" class="outline-btn mt-20 full-width" id="close-edit-profile-btn">Cancel</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Add Skill Modal -->
+    <div id="add-skill-modal" class="modal-overlay hidden">
+        <div class="glass-container modal-content">
+            <div class="modal-header">
+                <h2 class="section-title" id="add-skill-title">Add New Skill</h2>
+                <button id="close-add-skill-btn" class="close-btn">&times;</button>
+            </div>
+            <form id="add-skill-form">
+                <div class="input-group">
+                    <input type="text" id="skill-name" placeholder="Skill Name (e.g., Python, Web Development)" required>
+                </div>
+                <div class="input-group">
+                    <textarea id="skill-description" placeholder="Describe what you can teach about this skill..." rows="4" required></textarea>
+                </div>
+                <div class="input-group">
+                    <select id="skill-category" required>
+                        <option value="">Select Category</option>
+                        <option value="programming">Programming</option>
+                        <option value="design">Design</option>
+                        <option value="marketing">Marketing</option>
+                        <option value="business">Business</option>
+                        <option value="languages">Languages</option>
+                        <option value="music">Music</option>
+                        <option value="sports">Sports</option>
+                        <option value="other">Other</option>
+                    </select>
+                </div>
+                <div class="input-group">
+                    <input type="text" id="skill-tags" placeholder="Tags (comma separated, e.g., beginner, advanced, tools)">
+                </div>
+                <button type="submit" class="neon-btn full-width" id="submit-skill-btn">Add Skill</button>
+                <button type="button" class="outline-btn mt-20 full-width" id="cancel-add-skill-btn">Cancel</button>
             </form>
         </div>
     </div>

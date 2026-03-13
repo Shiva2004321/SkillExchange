@@ -28,6 +28,14 @@ document.addEventListener("DOMContentLoaded", () => {
     const editProfileForm = document.getElementById("edit-profile-form");
     const closeEditProfileBtn = document.getElementById("close-edit-profile-btn");
 
+    const addSkillBtn1 = document.getElementById("add-skill-btn");
+    const addFirstSkillBtn = document.getElementById("add-first-skill-btn");
+    const addSkillModal = document.getElementById("add-skill-modal");
+    const addSkillForm = document.getElementById("add-skill-form");
+    const closeAddSkillBtn = document.getElementById("close-add-skill-btn");
+    const cancelAddSkillBtn = document.getElementById("cancel-add-skill-btn");
+    const refreshFeedBtn = document.getElementById("refresh-feed-btn");
+
     const skillDetailModal = document.getElementById("skill-detail-modal");
     const closeSkillDetailBtn = document.getElementById("close-skill-detail-btn");
     const detailSkillTitle = document.getElementById("detail-skill-title");
@@ -247,56 +255,135 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     async function renderFeed(skillsArray) {
-        // Filter out user's own skills - only show other people's skills
+        // Separate user's own skills from others
+        const userSkills = skillsArray.filter(item => item.email === currentUserProfile.email);
         const otherSkills = skillsArray.filter(item => item.email !== currentUserProfile.email);
         
         skillsContainer.innerHTML = "";
-        if(otherSkills.length === 0) { skillsContainer.classList.add("hidden"); emptyState.classList.remove("hidden"); return; }
-        emptyState.classList.add("hidden"); skillsContainer.classList.remove("hidden");
-
-        for (const item of otherSkills) {
-            const card = document.createElement("div"); card.className = "skill-card";
+        
+        // Show user's own skills first
+        if (userSkills.length > 0) {
+            const userSkillsSection = document.createElement("div");
+            userSkillsSection.innerHTML = `<h3 style="color: var(--neon-cyan); margin-bottom: 15px; font-size: 1.1rem;">Your Skills</h3>`;
             
-            // Fetch ratings for this skill
-            let ratingInfo = { averageRating: 0, ratings: [] };
-            try {
-                const response = await fetch(`/api/ratings/${item._id}`);
-                ratingInfo = await response.json();
-            } catch (error) {
-                console.error('Error fetching ratings:', error);
+            for (const item of userSkills) {
+                const card = document.createElement("div"); 
+                card.className = "skill-card";
+                card.style.borderColor = "var(--neon-purple)";
+                
+                // Fetch ratings for this skill
+                let ratingInfo = { averageRating: 0, ratings: [] };
+                try {
+                    const response = await fetch(`/api/ratings/${item._id}`);
+                    ratingInfo = await response.json();
+                } catch (error) {
+                    console.error('Error fetching ratings:', error);
+                }
+                
+                const stars = '★'.repeat(Math.round(ratingInfo.averageRating)) + '☆'.repeat(5 - Math.round(ratingInfo.averageRating));
+                
+                card.innerHTML = `
+                    <div>
+                        <h3>${item.skill}</h3>
+                        <p class="instructor">Your skill</p>
+                        <p class="desc">${item.desc || "Ready to teach this skill."}</p>
+                        <div class="rating-display">
+                            <span class="stars">${stars}</span>
+                            <span class="rating-text">(${ratingInfo.averageRating.toFixed(1)}) - ${ratingInfo.ratings.length} reviews</span>
+                        </div>
+                    </div>
+                `;
+                
+                const buttonContainer = document.createElement("div");
+                buttonContainer.className = "button-container";
+                
+                const editBtn = document.createElement("button");
+                editBtn.textContent = "Edit";
+                editBtn.onclick = () => window.location.href = `my-skill.html?skillId=${item._id}&action=edit`;
+                buttonContainer.appendChild(editBtn);
+                
+                const viewBtn = document.createElement("button");
+                viewBtn.textContent = "View Details";
+                viewBtn.className = "outline-btn";
+                viewBtn.onclick = () => window.location.href = `skill.html?skillId=${item._id}`;
+                buttonContainer.appendChild(viewBtn);
+                
+                card.appendChild(buttonContainer);
+                userSkillsSection.appendChild(card);
             }
             
-            const stars = '★'.repeat(Math.round(ratingInfo.averageRating)) + '☆'.repeat(5 - Math.round(ratingInfo.averageRating));
-            
-            card.innerHTML = `
-                <div>
-                    <h3>${item.skill}</h3>
-                    <p class="instructor"><a href="profile.html?email=${encodeURIComponent(item.email)}" class="profile-link">@${item.user}</a></p>
-                    <p class="desc">${item.desc || "Ready to teach this skill."}</p>
-                    <div class="rating-display">
-                        <span class="stars">${stars}</span>
-                        <span class="rating-text">(${ratingInfo.averageRating.toFixed(1)}) - ${ratingInfo.ratings.length} reviews</span>
-                    </div>
-                </div>
-            `;
-            
-            const buttonContainer = document.createElement("div");
-            buttonContainer.className = "button-container";
-            
-            const reqBtn = document.createElement("button");
-            reqBtn.textContent = "Request to Learn";
-            reqBtn.onclick = () => window.location.href = `skill.html?skillId=${item._id}`;
-            buttonContainer.appendChild(reqBtn);
-            
-            const rateBtn = document.createElement("button");
-            rateBtn.textContent = "Rate Skill";
-            rateBtn.className = "outline-btn";
-            rateBtn.onclick = () => showRatingModal(item);
-            buttonContainer.appendChild(rateBtn);
-            
-            card.appendChild(buttonContainer);
-            skillsContainer.appendChild(card);
+            skillsContainer.appendChild(userSkillsSection);
         }
+        
+        // Show other people's skills
+        if (otherSkills.length > 0) {
+            if (userSkills.length > 0) {
+                const divider = document.createElement("hr");
+                divider.style.borderColor = "var(--glass-border)";
+                divider.style.margin = "30px 0";
+                skillsContainer.appendChild(divider);
+                
+                const otherSkillsHeader = document.createElement("h3");
+                otherSkillsHeader.textContent = "Available Skills";
+                otherSkillsHeader.style.color = "var(--neon-cyan)";
+                otherSkillsHeader.style.marginBottom = "15px";
+                otherSkillsHeader.style.fontSize = "1.1rem";
+                skillsContainer.appendChild(otherSkillsHeader);
+            }
+            
+            for (const item of otherSkills) {
+                const card = document.createElement("div"); card.className = "skill-card";
+                
+                // Fetch ratings for this skill
+                let ratingInfo = { averageRating: 0, ratings: [] };
+                try {
+                    const response = await fetch(`/api/ratings/${item._id}`);
+                    ratingInfo = await response.json();
+                } catch (error) {
+                    console.error('Error fetching ratings:', error);
+                }
+                
+                const stars = '★'.repeat(Math.round(ratingInfo.averageRating)) + '☆'.repeat(5 - Math.round(ratingInfo.averageRating));
+                
+                card.innerHTML = `
+                    <div>
+                        <h3>${item.skill}</h3>
+                        <p class="instructor"><a href="profile.html?email=${encodeURIComponent(item.email)}" class="profile-link">@${item.user}</a></p>
+                        <p class="desc">${item.desc || "Ready to teach this skill."}</p>
+                        <div class="rating-display">
+                            <span class="stars">${stars}</span>
+                            <span class="rating-text">(${ratingInfo.averageRating.toFixed(1)}) - ${ratingInfo.ratings.length} reviews</span>
+                        </div>
+                    </div>
+                `;
+                
+                const buttonContainer = document.createElement("div");
+                buttonContainer.className = "button-container";
+                
+                const reqBtn = document.createElement("button");
+                reqBtn.textContent = "Request to Learn";
+                reqBtn.onclick = () => window.location.href = `skill.html?skillId=${item._id}`;
+                buttonContainer.appendChild(reqBtn);
+                
+                const rateBtn = document.createElement("button");
+                rateBtn.textContent = "Rate Skill";
+                rateBtn.className = "outline-btn";
+                rateBtn.onclick = () => showRatingModal(item);
+                buttonContainer.appendChild(rateBtn);
+                
+                card.appendChild(buttonContainer);
+                skillsContainer.appendChild(card);
+            }
+        }
+        
+        if (userSkills.length === 0 && otherSkills.length === 0) {
+            skillsContainer.classList.add("hidden"); 
+            emptyState.classList.remove("hidden"); 
+            return; 
+        }
+        
+        emptyState.classList.add("hidden"); 
+        skillsContainer.classList.remove("hidden");
     }
 
     async function sendSkillRequest(teacherData) {
@@ -387,6 +474,77 @@ document.addEventListener("DOMContentLoaded", () => {
     });
 
     closeEditProfileBtn.addEventListener("click", () => editProfileModal.classList.add("hidden"));
+
+    // --- ADD SKILL ---
+    addSkillBtn.addEventListener("click", () => {
+        profileDropdown.classList.add("hidden");
+        addSkillModal.classList.remove("hidden");
+        document.getElementById("add-skill-title").textContent = "Add New Skill";
+        addSkillForm.reset();
+    });
+
+    addFirstSkillBtn.addEventListener("click", () => {
+        emptyState.classList.add("hidden");
+        addSkillModal.classList.remove("hidden");
+        document.getElementById("add-skill-title").textContent = "Add Your First Skill";
+        addSkillForm.reset();
+    });
+
+    closeAddSkillBtn.addEventListener("click", () => addSkillModal.classList.add("hidden"));
+    cancelAddSkillBtn.addEventListener("click", () => addSkillModal.classList.add("hidden"));
+
+    refreshFeedBtn.addEventListener("click", () => loadDashboardFeed());
+
+    addSkillForm.addEventListener("submit", async (e) => {
+        e.preventDefault();
+        const skillName = document.getElementById("skill-name").value.trim();
+        const description = document.getElementById("skill-description").value.trim();
+        const category = document.getElementById("skill-category").value;
+        const tags = document.getElementById("skill-tags").value.trim();
+
+        if (!skillName || !description || !category) {
+            alert("Please fill in all required fields.");
+            return;
+        }
+
+        try {
+            const skillData = {
+                user: currentUserProfile.name,
+                email: currentUserProfile.email,
+                skill: skillName,
+                desc: description,
+                category: category,
+                tags: tags ? tags.split(',').map(tag => tag.trim()) : []
+            };
+
+            const response = await fetch(`/api/skills`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(skillData)
+            });
+
+            if (response.ok) {
+                const newSkill = await response.json();
+                alert("✅ Skill added successfully!");
+                addSkillModal.classList.add("hidden");
+                
+                // Update user's skills list
+                if (!currentUserProfile.skills.includes(skillName)) {
+                    currentUserProfile.skills.push(skillName);
+                    localStorage.setItem('user', JSON.stringify(currentUserProfile));
+                    updateProfileUI();
+                }
+                
+                // Refresh the feed to show the new skill
+                loadDashboardFeed();
+            } else {
+                alert("❌ Failed to add skill. Please try again.");
+            }
+        } catch (error) {
+            console.error("Error adding skill:", error);
+            alert("❌ Error adding skill. Check server connection.");
+        }
+    });
 
     editProfileForm.addEventListener("submit", async (e) => {
         e.preventDefault();
