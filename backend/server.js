@@ -4,8 +4,11 @@ const cors = require('cors');
 const nodemailer = require('nodemailer');
 const mongoose = require('mongoose');
 const jwt = require('jsonwebtoken');
+const bcrypt = require('bcryptjs');
 const { createServer } = require('http');
 const { Server } = require('socket.io');
+const multer = require('multer');
+const path = require('path');
 
 const app = express();
 const server = createServer(app);
@@ -18,6 +21,7 @@ const io = new Server(server, {
 
 app.use(cors());
 app.use(express.json());
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 // --- MONGODB ATLAS CONNECTION ---
 const dbURI = process.env.MONGODB_URI || 'mongodb://localhost:27017/SkillExchange';
@@ -46,8 +50,18 @@ const userSchema = new mongoose.Schema({
     email: { type: String, required: true, unique: true, lowercase: true },
     mobile: { type: String, required: true },
     password: { type: String, required: true },
+    avatar: { type: String, default: '' },
+    role: { type: String, enum: ['user', 'admin'], default: 'user' },
+    isActive: { type: Boolean, default: true },
     skills: { type: [String], required: true },
     createdAt: { type: Date, default: Date.now }
+});
+
+// Hash password before saving
+userSchema.pre('save', async function(next) {
+    if (!this.isModified('password')) return next();
+    this.password = await bcrypt.hash(this.password, 12);
+    next();
 });
 
 // Handle duplicate key error
@@ -90,6 +104,42 @@ const ratingSchema = new mongoose.Schema({
 });
 const Rating = mongoose.model('Rating', ratingSchema);
 
+// 5. Chat Schema
+const chatSchema = new mongoose.Schema({
+    participants: [{ type: String, required: true }],
+    messages: [{
+        sender: { type: String, required: true },
+        message: { type: String, required: true },
+        timestamp: { type: Date, default: Date.now }
+    }],
+    lastMessage: { type: Date, default: Date.now },
+    createdAt: { type: Date, default: Date.now }
+});
+const Chat = mongoose.model('Chat', chatSchema);
+
+// 6. Notification Schema
+const notificationSchema = new mongoose.Schema({
+    userEmail: { type: String, required: true },
+    type: { type: String, required: true }, // 'request_update', 'new_message', 'rating_received'
+    title: { type: String, required: true },
+    message: { type: String, required: true },
+    isRead: { type: Boolean, default: false },
+    createdAt: { type: Date, default: Date.now }
+});
+const Notification = mongoose.model('Notification', notificationSchema);
+
+// Multer configuration for file uploads
+const storage = multer.diskStorage({
+    destination: (req, file, cb) => {
+        cb(null, path.join(__dirname, 'uploads'));
+    },
+    filename: (req, file, cb) => {
+        const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+        cb(null, file.fieldname + '-' + uniqueSuffix + path.extname(file.originalname));
+    }
+});
+const upload = multer({ storage: storage });
+
 
 // --- SMTP EMAIL SETUP ---
 const transporter = nodemailer.createTransport({
@@ -130,13 +180,52 @@ const authenticateToken = (req, res, next) => {
     });
 };
 
-// Socket.io for real-time notifications
+// Socket.io for real-time notifications and chat
 io.on('connection', (socket) => {
     console.log('User connected:', socket.id);
 
     socket.on('join', (email) => {
         socket.join(email);
         console.log(`User ${email} joined room`);
+    });
+
+    socket.on('join_chat', (chatId) => {
+        socket.join(chatId);
+        console.log(`User joined chat: ${chatId}`);
+    });
+
+    socket.on('send_message', async (data) => {
+        try {
+            const { chatId, message, sender } = data;
+            const chat = await Chat.findById(chatId);
+            
+            if (chat) {
+                const newMessage = {
+                    sender: sender,
+                    message: message,
+                    timestamp: new Date()
+                };
+                
+                chat.messages.push(newMessage);
+                chat.lastMessage = new Date();
+                await chat.save();
+                
+                // Send to all participants in the chat room
+                io.to(chatId).emit('receive_message', newMessage);
+                
+                // Also send notification to other participants
+                const otherParticipants = chat.participants.filter(p => p !== sender);
+                otherParticipants.forEach(participant => {
+                    io.to(participant).emit('notification', {
+                        type: 'new_message',
+                        title: 'New Message',
+                        message: `You have a new message from ${sender}`
+                    });
+                });
+            }
+        } catch (error) {
+            console.error('Error sending message:', error);
+        }
     });
 
     socket.on('disconnect', () => {
@@ -303,16 +392,22 @@ app.post('/api/login', async (req, res) => {
 
         const lowerEmail = email.toLowerCase();
 
-        // Search database for a user with this exact email AND password
-        const user = await User.findOne({ email: lowerEmail, password: password });
+        // Search database for a user with this exact email
+        const user = await User.findOne({ email: lowerEmail, isActive: true });
 
         if (!user) {
             return res.status(401).json({ message: "Invalid email or password. Access Denied." });
         }
 
+        // Check password
+        const isPasswordValid = await bcrypt.compare(password, user.password);
+        if (!isPasswordValid) {
+            return res.status(401).json({ message: "Invalid email or password. Access Denied." });
+        }
+
         // Generate JWT token
         const token = jwt.sign(
-            { userId: user._id, email: user.email },
+            { userId: user._id, email: user.email, role: user.role },
             process.env.JWT_SECRET || 'your-secret-key',
             { expiresIn: '24h' }
         );
@@ -321,7 +416,14 @@ app.post('/api/login', async (req, res) => {
         res.status(200).json({
             message: "Login successful!",
             token: token,
-            user: { name: user.name, email: user.email, mobile: user.mobile, skills: user.skills }
+            user: { 
+                name: user.name, 
+                email: user.email, 
+                mobile: user.mobile, 
+                skills: user.skills, 
+                avatar: user.avatar,
+                role: user.role
+            }
         });
 
     } catch (error) {
@@ -392,6 +494,15 @@ app.patch('/api/requests/:id', async (req, res) => {
             status: req.body.status
         });
 
+        // Save notification to database
+        const notification = new Notification({
+            userEmail: request.requesterEmail,
+            type: 'request_update',
+            title: 'Request Update',
+            message: message
+        });
+        await notification.save();
+
         res.json({ message: `Request ${req.body.status}!`, data: request });
     } catch (error) { res.status(500).json({ message: "Error updating request" }); }
 });
@@ -459,11 +570,199 @@ app.get('/api/ratings/:skillId', async (req, res) => {
     }
 });
 
+// --- ADMIN ROUTES ---
+// Get admin dashboard stats
+app.get('/api/admin/stats', authenticateToken, async (req, res) => {
+    if (req.user.role !== 'admin') return res.status(403).json({ message: 'Admin access required' });
+    
+    try {
+        const totalUsers = await User.countDocuments();
+        const totalSkills = await Skill.countDocuments();
+        const totalRequests = await Request.countDocuments();
+        const pendingRequests = await Request.countDocuments({ status: 'pending' });
+        const recentUsers = await User.find().sort({ createdAt: -1 }).limit(5).select('name email createdAt');
+        
+        res.json({
+            totalUsers,
+            totalSkills,
+            totalRequests,
+            pendingRequests,
+            recentUsers
+        });
+    } catch (error) {
+        res.status(500).json({ message: 'Error fetching stats' });
+    }
+});
+
+// Get all users (admin)
+app.get('/api/admin/users', authenticateToken, async (req, res) => {
+    if (req.user.role !== 'admin') return res.status(403).json({ message: 'Admin access required' });
+    
+    try {
+        const users = await User.find().select('-password');
+        res.json(users);
+    } catch (error) {
+        res.status(500).json({ message: 'Error fetching users' });
+    }
+});
+
+// Update user status (admin)
+app.patch('/api/admin/users/:id', authenticateToken, async (req, res) => {
+    if (req.user.role !== 'admin') return res.status(403).json({ message: 'Admin access required' });
+    
+    try {
+        const user = await User.findByIdAndUpdate(req.params.id, req.body, { new: true }).select('-password');
+        res.json(user);
+    } catch (error) {
+        res.status(500).json({ message: 'Error updating user' });
+    }
+});
+
+// Get all skills (admin)
+app.get('/api/admin/skills', authenticateToken, async (req, res) => {
+    if (req.user.role !== 'admin') return res.status(403).json({ message: 'Admin access required' });
+    
+    try {
+        const skills = await Skill.find();
+        res.json(skills);
+    } catch (error) {
+        res.status(500).json({ message: 'Error fetching skills' });
+    }
+});
+
+// Get all requests (admin)
+app.get('/api/admin/requests', authenticateToken, async (req, res) => {
+    if (req.user.role !== 'admin') return res.status(403).json({ message: 'Admin access required' });
+    
+    try {
+        const requests = await Request.find().populate('skillId');
+        res.json(requests);
+    } catch (error) {
+        res.status(500).json({ message: 'Error fetching requests' });
+    }
+});
+
+// --- CHAT ROUTES ---
+// Get user's chats
+app.get('/api/chats', authenticateToken, async (req, res) => {
+    try {
+        const chats = await Chat.find({ participants: req.user.email })
+            .sort({ lastMessage: -1 });
+        res.json(chats);
+    } catch (error) {
+        res.status(500).json({ message: 'Error fetching chats' });
+    }
+});
+
+// Get or create chat between two users
+app.post('/api/chats', authenticateToken, async (req, res) => {
+    try {
+        const { otherUserEmail } = req.body;
+        let chat = await Chat.findOne({ 
+            participants: { $all: [req.user.email, otherUserEmail] }
+        });
+        
+        if (!chat) {
+            chat = new Chat({ participants: [req.user.email, otherUserEmail] });
+            await chat.save();
+        }
+        
+        res.json(chat);
+    } catch (error) {
+        res.status(500).json({ message: 'Error creating chat' });
+    }
+});
+
+// Send message
+app.post('/api/chats/:chatId/messages', authenticateToken, async (req, res) => {
+    try {
+        const { message } = req.body;
+        const chat = await Chat.findById(req.params.chatId);
+        
+        if (!chat) return res.status(404).json({ message: 'Chat not found' });
+        
+        const newMessage = {
+            sender: req.user.email,
+            message: message,
+            timestamp: new Date()
+        };
+        
+        chat.messages.push(newMessage);
+        chat.lastMessage = new Date();
+        await chat.save();
+        
+        // Send real-time notification
+        const otherUser = chat.participants.find(p => p !== req.user.email);
+        io.to(otherUser).emit('new_message', {
+            chatId: chat._id,
+            message: newMessage,
+            from: req.user.email
+        });
+        
+        res.json(newMessage);
+    } catch (error) {
+        res.status(500).json({ message: 'Error sending message' });
+    }
+});
+
+// Get chat messages
+app.get('/api/chats/:chatId/messages', authenticateToken, async (req, res) => {
+    try {
+        const chat = await Chat.findById(req.params.chatId);
+        if (!chat) return res.status(404).json({ message: 'Chat not found' });
+        
+        res.json(chat.messages);
+    } catch (error) {
+        res.status(500).json({ message: 'Error fetching messages' });
+    }
+});
+
+// --- NOTIFICATIONS ---
+// Get user notifications
+app.get('/api/notifications', authenticateToken, async (req, res) => {
+    try {
+        const notifications = await Notification.find({ userEmail: req.user.email })
+            .sort({ createdAt: -1 })
+            .limit(50);
+        res.json(notifications);
+    } catch (error) {
+        res.status(500).json({ message: 'Error fetching notifications' });
+    }
+});
+
+// Mark notification as read
+app.patch('/api/notifications/:id/read', authenticateToken, async (req, res) => {
+    try {
+        const notification = await Notification.findByIdAndUpdate(
+            req.params.id, 
+            { isRead: true }, 
+            { new: true }
+        );
+        res.json(notification);
+    } catch (error) {
+        res.status(500).json({ message: 'Error updating notification' });
+    }
+});
+
+// --- FILE UPLOAD ---
+// Upload avatar
+app.post('/api/upload-avatar', authenticateToken, upload.single('avatar'), async (req, res) => {
+    try {
+        if (!req.file) return res.status(400).json({ message: 'No file uploaded' });
+        
+        const avatarUrl = `/uploads/${req.file.filename}`;
+        await User.findByIdAndUpdate(req.user.userId, { avatar: avatarUrl });
+        
+        res.json({ avatarUrl });
+    } catch (error) {
+        res.status(500).json({ message: 'Error uploading avatar' });
+    }
+});
+
 // use environment port (Render sets PORT) or fallback to 5000
 const PORT = process.env.PORT || 5000;
 
 // serve the frontend when deployed
-const path = require('path');
 app.use(express.static(path.join(__dirname, '../frontend')));
 app.get('*', (req, res) => {
     res.sendFile(path.join(__dirname, '../frontend/index.html'));
