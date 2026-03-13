@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>User Profile | SkillExchange</title>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700&family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <nav class="glass-navbar">
+        <div class="nav-left">
+            <a href="index.html" class="outline-btn outline-sm">← Back</a>
+            <h1 class="logo-text desktop-only">Skill<span class="neon-text">Ex</span></h1>
+        </div>
+        <div class="nav-right">
+            <button id="telegram-btn" class="outline-btn outline-sm">Telegram</button>
+        </div>
+    </nav>
+
+    <main class="dashboard-layout" style="grid-template-columns: 1fr; max-width: 900px; margin: 40px auto;">
+        <section class="glass-container" id="profile-detail" style="padding: 24px;">
+            <div class="profile-header" style="align-items: flex-start;">
+                <div class="avatar-circle large" id="profile-initial">U</div>
+                <div>
+                    <h2 id="profile-name">User Name</h2>
+                    <p class="text-muted" id="profile-email">user@example.com</p>
+                    <p class="text-muted" id="profile-mobile">+91 0000000000</p>
+                </div>
+            </div>
+
+            <hr class="glass-divider">
+
+            <div id="profile-links" style="display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 16px;"></div>
+
+            <div>
+                <h4>Skills</h4>
+                <div id="profile-skills" class="skills-chips mt-10"></div>
+            </div>
+
+            <div id="profile-message" class="text-muted" style="margin-top: 18px;"></div>
+        </section>
+    </main>
+
+    <script src="profile.js"></script>
+</body>
+</html>

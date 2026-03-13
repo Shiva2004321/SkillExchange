@@ -25,6 +25,9 @@ app.use(cors());
 app.use(express.json());
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
+// Serve frontend static files (index.html, skill.html, profile.html, etc.)
+app.use(express.static(path.join(__dirname, '..', 'frontend')));
+
 // --- MONGODB ATLAS CONNECTION ---
 const dbURI = process.env.MONGODB_URI || 'mongodb://localhost:27017/SkillExchange';
 
@@ -56,6 +59,9 @@ const userSchema = new mongoose.Schema({
     role: { type: String, enum: ['user', 'admin'], default: 'user' },
     isActive: { type: Boolean, default: true },
     skills: { type: [String], required: true },
+    github: { type: String, default: '' },
+    linkedin: { type: String, default: '' },
+    telegram: { type: String, default: '' },
     createdAt: { type: Date, default: Date.now }
 });
 
@@ -304,7 +310,7 @@ app.post('/api/register', async (req, res) => {
     try {
         console.log("📝 Registration request received:", { name: req.body.name, email: req.body.email, mobile: req.body.mobile, skillsCount: req.body.skills?.length });
         
-        const { name, email, mobile, password, skills } = req.body;
+        const { name, email, mobile, password, skills, github, linkedin, telegram } = req.body;
 
         // Validate required fields
         if (!name || !email || !mobile || !password) {
@@ -335,7 +341,10 @@ app.post('/api/register', async (req, res) => {
             email: lowerEmail, 
             mobile, 
             password, 
-            skills 
+            skills,
+            github: github || '',
+            linkedin: linkedin || '',
+            telegram: telegram || ''
         });
 
         const savedUser = await newUser.save();
@@ -424,6 +433,9 @@ app.post('/api/login', async (req, res) => {
                 mobile: user.mobile, 
                 skills: user.skills, 
                 avatar: user.avatar,
+                github: user.github || '',
+                linkedin: user.linkedin || '',
+                telegram: user.telegram || '',
                 role: user.role
             }
         });
@@ -435,11 +447,32 @@ app.post('/api/login', async (req, res) => {
 });
 
 // --- SKILL & REQUEST ROUTES ---
+
+// Get user profile by email
+app.get('/api/user/:email', async (req, res) => {
+    try {
+        const user = await User.findOne({ email: req.params.email.toLowerCase() }).select('-password');
+        if (!user) return res.status(404).json({ message: 'User not found' });
+        res.json(user);
+    } catch (error) {
+        res.status(500).json({ message: 'Error fetching user profile' });
+    }
+});
+
 app.get('/api/skills', async (req, res) => {
     try {
         const skills = await Skill.find().sort({ createdAt: -1 });
         res.json(skills);
     } catch (error) { res.status(500).json({ message: "Error fetching skills" }); }
+});
+
+// Get a single skill by ID
+app.get('/api/skills/:id', async (req, res) => {
+    try {
+        const skill = await Skill.findById(req.params.id);
+        if (!skill) return res.status(404).json({ message: "Skill not found" });
+        res.json(skill);
+    } catch (error) { res.status(500).json({ message: "Error fetching skill" }); }
 });
 
 app.post('/api/skills', async (req, res) => {
@@ -512,13 +545,13 @@ app.patch('/api/requests/:id', async (req, res) => {
 // --- UPDATE PROFILE ---
 app.put('/api/update-profile', async (req, res) => {
     try {
-        const { email, name, mobile } = req.body;
+        const { email, name, mobile, github, linkedin, telegram } = req.body;
         
         console.log("Update request received for email:", email);
         
         const updatedUser = await User.findOneAndUpdate(
             { email: email.toLowerCase() },
-            { $set: { name: name, mobile: mobile } },
+            { $set: { name: name, mobile: mobile, github: github || '', linkedin: linkedin || '', telegram: telegram || '' } },
             { new: true }
         );
 
@@ -530,7 +563,15 @@ app.put('/api/update-profile', async (req, res) => {
 
         res.status(200).json({
             message: "Profile updated successfully!",
-            user: { name: updatedUser.name, email: updatedUser.email, mobile: updatedUser.mobile, skills: updatedUser.skills }
+            user: { 
+                name: updatedUser.name, 
+                email: updatedUser.email, 
+                mobile: updatedUser.mobile, 
+                skills: updatedUser.skills,
+                github: updatedUser.github || '',
+                linkedin: updatedUser.linkedin || '',
+                telegram: updatedUser.telegram || ''
+            }
         });
     } catch (error) {
         console.error("Profile update error:", error);

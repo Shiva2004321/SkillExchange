@@ -33,6 +33,9 @@
                 <input type="tel" id="reg-mobile" placeholder="Mobile Number (10 digits)" required>
                 <div class="error-msg" id="mobile-error">Must be 10 digits.</div>
             </div>
+            <div class="input-group"><input type="text" id="reg-github" placeholder="GitHub URL (optional)"></div>
+            <div class="input-group"><input type="text" id="reg-linkedin" placeholder="LinkedIn URL (optional)"></div>
+            <div class="input-group"><input type="text" id="reg-telegram" placeholder="Telegram handle (optional)"></div>
             <div class="input-group"><input type="password" id="reg-password" placeholder="Password" required></div>
             <div class="input-group">
                 <input type="password" id="reg-confirm-password" placeholder="Confirm Password" required>
@@ -65,7 +68,7 @@
             </div>
             <div class="nav-right">
                 <button id="notifications-btn" class="outline-btn outline-sm">🔔</button>
-                <button id="chat-btn" class="outline-btn outline-sm">💬</button>
+                <button id="chat-btn" class="outline-btn outline-sm">Telegram</button>
                 <button id="logout-btn" class="outline-btn outline-sm">Disconnect</button>
             </div>
         </nav>
@@ -119,6 +122,18 @@
             <h2 class="section-title">Incoming Signals</h2>
             <div id="incoming-requests-container" class="requests-grid"></div>
             <button id="close-requests-btn" class="outline-btn mt-20 full-width">Close Panel</button>
+        </div>
+    </div>
+
+    <div id="skill-detail-modal" class="modal-overlay hidden">
+        <div class="glass-container modal-content" style="position: relative;">
+            <button id="close-skill-detail-btn" class="close-btn" style="position: absolute; top: 15px; right: 15px;">&times;</button>
+            <h2 class="section-title" id="detail-skill-title">Skill Details</h2>
+            <p class="text-muted" id="detail-skill-user">By: <span></span></p>
+            <p class="desc" id="detail-skill-desc">Skill description goes here.</p>
+            <div class="rating-display" id="detail-skill-rating"></div>
+            <div id="detail-skill-message" class="text-muted" style="margin-top: 10px;"></div>
+            <button id="detail-request-btn" class="neon-btn full-width mt-20">Request to Learn</button>
         </div>
     </div>
 
@@ -180,6 +195,9 @@
                 <div class="input-group"><input type="text" id="edit-name" placeholder="Full Name" required></div>
                 <div class="input-group"><input type="email" id="edit-email" placeholder="Email Address" required></div>
                 <div class="input-group"><input type="tel" id="edit-mobile" placeholder="Mobile Number" required></div>
+                <div class="input-group"><input type="text" id="edit-github" placeholder="GitHub URL (optional)"></div>
+                <div class="input-group"><input type="text" id="edit-linkedin" placeholder="LinkedIn URL (optional)"></div>
+                <div class="input-group"><input type="text" id="edit-telegram" placeholder="Telegram handle (optional)"></div>
                 <button type="submit" class="neon-btn full-width">Save Changes</button>
                 <button type="button" class="outline-btn mt-20 full-width" id="close-edit-profile-btn">Cancel</button>
             </form>

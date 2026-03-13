@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Skill Detail | SkillExchange</title>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700&family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <nav class="glass-navbar">
+        <div class="nav-left">
+            <a href="index.html" class="outline-btn outline-sm">← Back</a>
+            <h1 class="logo-text desktop-only">Skill<span class="neon-text">Ex</span></h1>
+        </div>
+        <div class="nav-right">
+            <button id="telegram-btn" class="outline-btn outline-sm">Telegram</button>
+        </div>
+    </nav>
+
+    <main class="dashboard-layout" style="grid-template-columns: 1fr; max-width: 900px; margin: 40px auto;">
+        <section class="glass-container" id="skill-detail" style="padding: 24px;">
+            <h2 class="section-title" id="skill-title">Loading skill...</h2>
+            <p class="text-muted" id="skill-meta"></p>
+            <div id="skill-links" style="margin-top: 10px;"></div>
+            <p class="desc" id="skill-desc">Fetching details...</p>
+            <div class="rating-display" id="skill-rating" style="margin-top: 20px;"></div>
+            <div id="skill-message" class="text-muted" style="margin-top: 20px;"></div>
+            <button id="request-skill-btn" class="neon-btn full-width mt-20">Request to Learn</button>
+        </section>
+    </main>
+
+    <script src="skill.js"></script>
+</body>
+</html>

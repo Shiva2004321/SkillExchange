@@ -4,9 +4,10 @@
 }
 * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Poppins', sans-serif; }
 body {
-    background-color: var(--bg-color); color: var(--text-main); min-height: 100vh; overflow-x: hidden;
-    background-image: radial-gradient(circle at 15% 50%, rgba(0, 242, 254, 0.05), transparent 30%),
-                      radial-gradient(circle at 85% 30%, rgba(79, 172, 254, 0.05), transparent 30%);
+    background-color: var(--bg-color);
+    color: var(--text-main);
+    min-height: 100vh;
+    overflow-x: hidden;
 }
 .logo-text { font-family: 'Orbitron', sans-serif; font-size: 1.5rem; letter-spacing: 1px; cursor: pointer; }
 .neon-text { color: var(--neon-cyan); text-shadow: 0 0 8px rgba(0, 242, 254, 0.4); }
@@ -28,7 +29,7 @@ input {
 }
 input:focus { border-color: var(--neon-cyan); box-shadow: 0 0 10px rgba(0, 242, 254, 0.2); background: rgba(255, 255, 255, 0.06); }
 .neon-btn {
-    width: 100%; padding: 12px; background: linear-gradient(135deg, var(--neon-purple) 0%, var(--neon-cyan) 100%);
+    width: 100%; padding: 12px; background: var(--neon-cyan);
     border: none; border-radius: 8px; color: #000; font-weight: 700; font-size: 1rem; cursor: pointer; transition: all 0.3s ease; text-transform: uppercase;
 }
 .neon-btn:hover { box-shadow: 0 0 20px rgba(0, 242, 254, 0.5); transform: translateY(-2px); }
@@ -37,6 +38,8 @@ input:focus { border-color: var(--neon-cyan); box-shadow: 0 0 10px rgba(0, 242, 
 .outline-sm { padding: 6px 12px; font-size: 0.85rem; }
 .toggle-link { display: inline-block; margin-top: 1.5rem; color: var(--neon-purple); font-size: 0.9rem; cursor: pointer; }
 .toggle-link:hover { color: var(--neon-cyan); text-decoration: underline; }
+.profile-link { color: var(--neon-cyan); text-decoration: none; font-weight: 600; }
+.profile-link:hover { text-decoration: underline; }
 .error-msg { color: #ff4757; font-size: 0.8rem; text-align: left; margin-top: 5px; margin-left: 5px; display: none; }
 
 .skills-input-wrapper { display: flex; gap: 10px; margin-bottom: 0.5rem; }
@@ -52,7 +55,7 @@ input:focus { border-color: var(--neon-cyan); box-shadow: 0 0 10px rgba(0, 242, 
 .nav-left { display: flex; align-items: center; gap: 15px; }
 .avatar-container { cursor: pointer; position: relative; }
 .avatar-circle {
-    width: 40px; height: 40px; border-radius: 50%; aspect-ratio: 1 / 1; line-height: 1; background: linear-gradient(135deg, var(--neon-purple), var(--neon-cyan));
+    width: 40px; height: 40px; border-radius: 50%; aspect-ratio: 1 / 1; line-height: 1; background: var(--neon-cyan);
     display: flex; align-items: center; justify-content: center; font-weight: bold; color: #000; font-size: 1.2rem; box-shadow: 0 0 10px rgba(0, 242, 254, 0.3); transition: transform 0.3s;
 }
 .avatar-container:hover .avatar-circle { transform: scale(1.05); box-shadow: 0 0 15px rgba(0, 242, 254, 0.6); }
@@ -72,7 +75,7 @@ input:focus { border-color: var(--neon-cyan); box-shadow: 0 0 10px rgba(0, 242, 
 
 .skills-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px; }
 .skill-card {
-    background: linear-gradient(145deg, rgba(20, 25, 40, 0.8), rgba(10, 15, 25, 0.9)); border: 1px solid rgba(255, 255, 255, 0.05);
+    background: rgba(15, 20, 35, 0.9); border: 1px solid rgba(255, 255, 255, 0.05);
     border-radius: 12px; padding: 20px; transition: all 0.4s ease; position: relative; overflow: hidden; display: flex; flex-direction: column; justify-content: space-between;
 }
 .skill-card:hover { transform: translateY(-5px); border-color: rgba(0, 242, 254, 0.4); box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5); }

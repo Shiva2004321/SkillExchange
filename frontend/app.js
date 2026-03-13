@@ -28,9 +28,34 @@ document.addEventListener("DOMContentLoaded", () => {
     const editProfileForm = document.getElementById("edit-profile-form");
     const closeEditProfileBtn = document.getElementById("close-edit-profile-btn");
 
-    let currentUserProfile = { name: "", email: "", mobile: "", skills: [] };
+    const skillDetailModal = document.getElementById("skill-detail-modal");
+    const closeSkillDetailBtn = document.getElementById("close-skill-detail-btn");
+    const detailSkillTitle = document.getElementById("detail-skill-title");
+    const detailSkillUser = document.getElementById("detail-skill-user");
+    const detailSkillDesc = document.getElementById("detail-skill-desc");
+    const detailSkillRating = document.getElementById("detail-skill-rating");
+    const detailSkillMessage = document.getElementById("detail-skill-message");
+    const detailRequestBtn = document.getElementById("detail-request-btn");
+    let currentSkillDetail = null;
+
+    let currentUserProfile = { name: "", email: "", mobile: "", skills: [], github: '', linkedin: '', telegram: '' };
     let globalSkillsFeed = [];
     let token = localStorage.getItem('token');
+
+    // Restore stored user profile (for navigation across pages)
+    const storedUser = localStorage.getItem('user');
+    if (storedUser) {
+        try { currentUserProfile = JSON.parse(storedUser); } catch (e) { console.warn('Failed to parse stored user', e); }
+    }
+
+    // If already logged in, show dashboard immediately
+    if (token && currentUserProfile.email) {
+        updateProfileUI();
+        authSection.classList.add("hidden");
+        mainApp.classList.remove("hidden");
+        socket.emit('join', currentUserProfile.email);
+        loadDashboardFeed();
+    }
 
     goToRegister.addEventListener("click", () => {
         loginForm.classList.add("hidden"); registerForm.classList.remove("hidden");
@@ -75,6 +100,9 @@ document.addEventListener("DOMContentLoaded", () => {
         const name = document.getElementById("reg-name").value;
         const email = document.getElementById("reg-email").value;
         const mobile = document.getElementById("reg-mobile").value;
+        const github = document.getElementById("reg-github").value;
+        const linkedin = document.getElementById("reg-linkedin").value;
+        const telegram = document.getElementById("reg-telegram").value;
         const password = document.getElementById("reg-password").value;
         const confirmPassword = document.getElementById("reg-confirm-password").value;
 
@@ -91,7 +119,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 const response = await fetch(`/api/register`, {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ name, email, mobile, password, skills: regSkills })
+                    body: JSON.stringify({ name, email, mobile, github, linkedin, telegram, password, skills: regSkills })
                 });
 
                 const data = await response.json();
@@ -135,6 +163,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 // Login Success! Load user profile from Database
                 token = data.token;
                 localStorage.setItem('token', token);
+                localStorage.setItem('user', JSON.stringify(data.user));
                 currentUserProfile = data.user;
                 updateProfileUI();
                 
@@ -159,7 +188,9 @@ document.addEventListener("DOMContentLoaded", () => {
         mainApp.classList.add("hidden"); profileDropdown.classList.add("hidden");
         authSection.classList.remove("hidden"); loginForm.reset(); searchInput.value = "";
         localStorage.removeItem('token');
+        localStorage.removeItem('user');
         token = null;
+        currentUserProfile = { name: "", email: "", mobile: "", skills: [] };
     });
 
     profileAvatarBtn.addEventListener("click", () => profileDropdown.classList.toggle("hidden"));
@@ -219,7 +250,7 @@ document.addEventListener("DOMContentLoaded", () => {
             card.innerHTML = `
                 <div>
                     <h3>${item.skill}</h3>
-                    <p class="instructor">@${item.user}</p>
+                    <p class="instructor"><a href="profile.html?email=${encodeURIComponent(item.email)}" class="profile-link">@${item.user}</a></p>
                     <p class="desc">${item.desc || "Ready to teach this skill."}</p>
                     <div class="rating-display">
                         <span class="stars">${stars}</span>
@@ -233,7 +264,7 @@ document.addEventListener("DOMContentLoaded", () => {
             
             const reqBtn = document.createElement("button");
             reqBtn.textContent = "Request to Learn";
-            reqBtn.onclick = () => sendSkillRequest(item);
+            reqBtn.onclick = () => window.location.href = `skill.html?skillId=${item._id}`;
             buttonContainer.appendChild(reqBtn);
             
             const rateBtn = document.createElement("button");
@@ -248,8 +279,11 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     async function sendSkillRequest(teacherData) {
-        if(teacherData.email === currentUserProfile.email) return alert("You cannot request your own skill!");
-        
+        if (teacherData.email === currentUserProfile.email) {
+            detailSkillMessage.textContent = "⚠️ You cannot request your own skill.";
+            return false;
+        }
+
         const payload = {
             requesterName: currentUserProfile.name,
             requesterEmail: currentUserProfile.email,
@@ -262,8 +296,45 @@ document.addEventListener("DOMContentLoaded", () => {
             await fetch(`/api/requests`, {
                 method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload)
             });
-            alert(`Request sent to ${teacherData.user}! An email notification has been triggered.`);
-        } catch (error) { alert("Failed to send request. Check server console."); }
+
+            detailSkillMessage.textContent = `✅ Request sent to ${teacherData.user}. They'll receive an email shortly.`;
+            detailRequestBtn.disabled = true;
+            detailRequestBtn.textContent = "Requested";
+            return true;
+        } catch (error) {
+            console.error("Request error:", error);
+            detailSkillMessage.textContent = "❌ Failed to send request. Please try again later.";
+            return false;
+        }
+    }
+
+    async function openSkillDetail(skill) {
+        currentSkillDetail = skill;
+        detailSkillTitle.textContent = skill.skill;
+        detailSkillUser.innerHTML = `By: <span>@${skill.user}</span>`;
+        detailSkillDesc.textContent = skill.desc || "No description provided yet.";
+
+        // Load latest rating info for this skill
+        let ratingInfo = { averageRating: 0, ratings: [] };
+        try {
+            const response = await fetch(`/api/ratings/${skill._id}`);
+            ratingInfo = await response.json();
+        } catch (error) {
+            console.error('Error fetching rating for skill detail:', error);
+        }
+
+        const stars = '★'.repeat(Math.round(ratingInfo.averageRating)) + '☆'.repeat(5 - Math.round(ratingInfo.averageRating));
+        detailSkillRating.innerHTML = `
+            <span class="stars">${stars}</span>
+            <span class="rating-text">(${ratingInfo.averageRating.toFixed(1)}) - ${ratingInfo.ratings.length} reviews</span>
+        `;
+
+        detailSkillMessage.textContent = "";
+        detailRequestBtn.disabled = false;
+        detailRequestBtn.textContent = "Request to Learn";
+        detailRequestBtn.onclick = () => sendSkillRequest(skill);
+
+        skillDetailModal.classList.remove("hidden");
     }
 
     viewRequestsBtn.addEventListener("click", async () => {
@@ -279,6 +350,7 @@ document.addEventListener("DOMContentLoaded", () => {
     });
 
     closeRequestsBtn.addEventListener("click", () => requestsModal.classList.add("hidden"));
+    closeSkillDetailBtn.addEventListener("click", () => skillDetailModal.classList.add("hidden"));
 
     // --- EDIT PROFILE ---
     editProfileBtn.addEventListener("click", () => {
@@ -287,6 +359,9 @@ document.addEventListener("DOMContentLoaded", () => {
         document.getElementById("edit-name").value = currentUserProfile.name;
         document.getElementById("edit-email").value = currentUserProfile.email;
         document.getElementById("edit-mobile").value = currentUserProfile.mobile || "";
+        document.getElementById("edit-github").value = currentUserProfile.github || "";
+        document.getElementById("edit-linkedin").value = currentUserProfile.linkedin || "";
+        document.getElementById("edit-telegram").value = currentUserProfile.telegram || "";
     });
 
     closeEditProfileBtn.addEventListener("click", () => editProfileModal.classList.add("hidden"));
@@ -296,7 +371,10 @@ document.addEventListener("DOMContentLoaded", () => {
         const updatedProfile = {
             email: currentUserProfile.email.toLowerCase(),
             name: document.getElementById("edit-name").value,
-            mobile: document.getElementById("edit-mobile").value
+            mobile: document.getElementById("edit-mobile").value,
+            github: document.getElementById("edit-github").value,
+            linkedin: document.getElementById("edit-linkedin").value,
+            telegram: document.getElementById("edit-telegram").value
         };
 
         try {
@@ -309,6 +387,7 @@ document.addEventListener("DOMContentLoaded", () => {
             if (response.ok) {
                 const data = await response.json();
                 currentUserProfile = data.user;
+                localStorage.setItem('user', JSON.stringify(currentUserProfile));
                 updateProfileUI();
                 editProfileModal.classList.add("hidden");
                 alert("Profile updated successfully!");
@@ -445,8 +524,8 @@ document.addEventListener("DOMContentLoaded", () => {
     let chatUsers = [];
 
     chatBtn.addEventListener("click", () => {
-        chatModal.classList.remove("hidden");
-        loadChatUsers();
+        const handle = currentUserProfile.telegram ? currentUserProfile.telegram.replace(/^@/, '') : 'SkillExchangeApp';
+        window.open(`https://t.me/${handle}`, '_blank');
     });
 
     closeChatBtn.addEventListener("click", () => {
