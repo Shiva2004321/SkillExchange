@@ -172,57 +172,8 @@
         </div>
         <div id="notifications-list" class="notifications-list"></div>
     </div>
-        <nav class="glass-navbar">
-            <div class="nav-left">
-                <h1 class="logo-text">Admin<span class="neon-text">Panel</span></h1>
-            </div>
-            <div class="nav-right">
-                <button id="back-to-main-btn" class="outline-btn">Back to App</button>
-            </div>
-        </nav>
 
-        <div class="admin-dashboard">
-            <div class="stats-grid">
-                <div class="stat-card glass-container">
-                    <h3>Total Users</h3>
-                    <div class="stat-number" id="total-users">0</div>
-                </div>
-                <div class="stat-card glass-container">
-                    <h3>Total Skills</h3>
-                    <div class="stat-number" id="total-skills">0</div>
-                </div>
-                <div class="stat-card glass-container">
-                    <h3>Total Requests</h3>
-                    <div class="stat-number" id="total-requests">0</div>
-                </div>
-                <div class="stat-card glass-container">
-                    <h3>Pending Requests</h3>
-                    <div class="stat-number" id="pending-requests">0</div>
-                </div>
-            </div>
-
-            <div class="admin-tabs">
-                <button class="tab-btn active" data-tab="users">Users</button>
-                <button class="tab-btn" data-tab="skills">Skills</button>
-                <button class="tab-btn" data-tab="requests">Requests</button>
-            </div>
-
-            <div id="users-tab" class="tab-content">
-                <h2>Users Management</h2>
-                <div id="users-list" class="admin-table"></div>
-            </div>
-
-            <div id="skills-tab" class="tab-content hidden">
-                <h2>Skills Management</h2>
-                <div id="skills-list" class="admin-table"></div>
-            </div>
-
-            <div id="requests-tab" class="tab-content hidden">
-                <h2>Requests Management</h2>
-                <div id="requests-list" class="admin-table"></div>
-            </div>
-        </div>
-    </div>
+    <div id="edit-profile-modal" class="modal-overlay hidden">
         <div class="glass-container modal-content">
             <h2 class="section-title">Edit Profile</h2>
             <form id="edit-profile-form">

@@ -759,8 +759,8 @@ app.post('/api/upload-avatar', authenticateToken, upload.single('avatar'), async
     }
 });
 
-// use environment port (Render sets PORT) or fallback to 5000
-const PORT = process.env.PORT || 5000;
+// use environment port (Render sets PORT) or fallback to 5050
+const PORT = process.env.PORT || 5050;
 
 // serve the frontend when deployed
 app.use(express.static(path.join(__dirname, '../frontend')));
@@ -768,4 +768,4 @@ app.get('*', (req, res) => {
     res.sendFile(path.join(__dirname, '../frontend/index.html'));
 });
 
-server.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));
+server.listen(PORT, '0.0.0.0', () => console.log(`🚀 Server running on port ${PORT}`));
