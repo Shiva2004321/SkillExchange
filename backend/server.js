@@ -3,8 +3,19 @@ const express = require('express');
 const cors = require('cors');
 const nodemailer = require('nodemailer');
 const mongoose = require('mongoose');
+const jwt = require('jsonwebtoken');
+const { createServer } = require('http');
+const { Server } = require('socket.io');
 
 const app = express();
+const server = createServer(app);
+const io = new Server(server, {
+    cors: {
+        origin: "*",
+        methods: ["GET", "POST"]
+    }
+});
+
 app.use(cors());
 app.use(express.json());
 
@@ -68,6 +79,17 @@ const requestSchema = new mongoose.Schema({
 });
 const Request = mongoose.model('Request', requestSchema);
 
+// 4. Rating Schema
+const ratingSchema = new mongoose.Schema({
+    skillId: { type: mongoose.Schema.Types.ObjectId, ref: 'Skill', required: true },
+    raterEmail: { type: String, required: true },
+    ratedEmail: { type: String, required: true },
+    rating: { type: Number, min: 1, max: 5, required: true },
+    comment: { type: String },
+    createdAt: { type: Date, default: Date.now }
+});
+const Rating = mongoose.model('Rating', ratingSchema);
+
 
 // --- SMTP EMAIL SETUP ---
 const transporter = nodemailer.createTransport({
@@ -87,6 +109,38 @@ app.get('/api/health', (req, res) => {
         status: dbConnected ? "✅ Database Connected" : "❌ Database Not Connected",
         mongooseState: mongoose.connection.readyState,
         message: dbConnected ? "Server is running and connected to MongoDB" : "Server is running but MongoDB is not connected"
+    });
+});
+
+// JWT Authentication Middleware
+const authenticateToken = (req, res, next) => {
+    const authHeader = req.headers['authorization'];
+    const token = authHeader && authHeader.split(' ')[1];
+
+    if (!token) {
+        return res.status(401).json({ message: 'Access token required' });
+    }
+
+    jwt.verify(token, process.env.JWT_SECRET || 'your-secret-key', (err, user) => {
+        if (err) {
+            return res.status(403).json({ message: 'Invalid or expired token' });
+        }
+        req.user = user;
+        next();
+    });
+};
+
+// Socket.io for real-time notifications
+io.on('connection', (socket) => {
+    console.log('User connected:', socket.id);
+
+    socket.on('join', (email) => {
+        socket.join(email);
+        console.log(`User ${email} joined room`);
+    });
+
+    socket.on('disconnect', () => {
+        console.log('User disconnected:', socket.id);
     });
 });
 
@@ -256,9 +310,17 @@ app.post('/api/login', async (req, res) => {
             return res.status(401).json({ message: "Invalid email or password. Access Denied." });
         }
 
-        // If found, send the user data back to the frontend
+        // Generate JWT token
+        const token = jwt.sign(
+            { userId: user._id, email: user.email },
+            process.env.JWT_SECRET || 'your-secret-key',
+            { expiresIn: '24h' }
+        );
+
+        // If found, send the user data and token back to the frontend
         res.status(200).json({
             message: "Login successful!",
+            token: token,
             user: { name: user.name, email: user.email, mobile: user.mobile, skills: user.skills }
         });
 
@@ -322,6 +384,14 @@ app.patch('/api/requests/:id', async (req, res) => {
         };
         transporter.sendMail(mailOptions, (error, info) => { if (error) console.error("Email Error:", error); });
 
+        // Send real-time notification
+        io.to(request.requesterEmail).emit('notification', {
+            type: 'request_update',
+            message: message,
+            skill: request.skillName,
+            status: req.body.status
+        });
+
         res.json({ message: `Request ${req.body.status}!`, data: request });
     } catch (error) { res.status(500).json({ message: "Error updating request" }); }
 });
@@ -355,6 +425,40 @@ app.put('/api/update-profile', async (req, res) => {
     }
 });
 
+// --- RATING SYSTEM ---
+// Submit a rating
+app.post('/api/rate', authenticateToken, async (req, res) => {
+    try {
+        const { skillId, rating, comment } = req.body;
+        const skill = await Skill.findById(skillId);
+        if (!skill) return res.status(404).json({ message: 'Skill not found' });
+
+        const newRating = new Rating({
+            skillId: skillId,
+            raterEmail: req.user.email,
+            ratedEmail: skill.email,
+            rating: rating,
+            comment: comment
+        });
+
+        await newRating.save();
+        res.json({ message: 'Rating submitted successfully' });
+    } catch (error) {
+        res.status(500).json({ message: 'Error submitting rating' });
+    }
+});
+
+// Get ratings for a skill
+app.get('/api/ratings/:skillId', async (req, res) => {
+    try {
+        const ratings = await Rating.find({ skillId: req.params.skillId });
+        const averageRating = ratings.length > 0 ? ratings.reduce((sum, r) => sum + r.rating, 0) / ratings.length : 0;
+        res.json({ ratings, averageRating });
+    } catch (error) {
+        res.status(500).json({ message: 'Error fetching ratings' });
+    }
+});
+
 // use environment port (Render sets PORT) or fallback to 5000
 const PORT = process.env.PORT || 5000;
 
@@ -365,4 +469,4 @@ app.get('*', (req, res) => {
     res.sendFile(path.join(__dirname, '../frontend/index.html'));
 });
 
-app.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));
+server.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));

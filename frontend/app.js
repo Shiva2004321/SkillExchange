@@ -1,4 +1,7 @@
 document.addEventListener("DOMContentLoaded", () => {
+    // Initialize Socket.io
+    const socket = io();
+
     const authSection = document.getElementById("auth-section");
     const mainApp = document.getElementById("main-app");
     const loginForm = document.getElementById("login-form");
@@ -27,6 +30,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     let currentUserProfile = { name: "", email: "", mobile: "", skills: [] };
     let globalSkillsFeed = [];
+    let token = localStorage.getItem('token');
 
     goToRegister.addEventListener("click", () => {
         loginForm.classList.add("hidden"); registerForm.classList.remove("hidden");
@@ -129,14 +133,21 @@ document.addEventListener("DOMContentLoaded", () => {
 
             if (response.ok) {
                 // Login Success! Load user profile from Database
+                const data = await response.json();
+                token = data.token;
+                localStorage.setItem('token', token);
                 currentUserProfile = data.user;
                 updateProfileUI();
+                
+                // Join Socket.io room for notifications
+                socket.emit('join', currentUserProfile.email);
                 
                 authSection.classList.add("hidden");
                 mainApp.classList.remove("hidden");
                 loadDashboardFeed(); 
             } else {
                 // Login Failed! Show error and block entry
+                const data = await response.json();
                 loginError.textContent = data.message;
                 loginError.style.display = "block";
             }
@@ -149,9 +160,16 @@ document.addEventListener("DOMContentLoaded", () => {
     logoutBtn.addEventListener("click", () => {
         mainApp.classList.add("hidden"); profileDropdown.classList.add("hidden");
         authSection.classList.remove("hidden"); loginForm.reset(); searchInput.value = "";
+        localStorage.removeItem('token');
+        token = null;
     });
 
     profileAvatarBtn.addEventListener("click", () => profileDropdown.classList.toggle("hidden"));
+
+    // Socket.io notification listener
+    socket.on('notification', (data) => {
+        alert(`🔔 ${data.message}`);
+    });
 
     function updateProfileUI() {
         const initial = currentUserProfile.name.charAt(0).toUpperCase();
@@ -178,7 +196,7 @@ document.addEventListener("DOMContentLoaded", () => {
         setTimeout(() => { renderFeed(globalSkillsFeed); loadingState.classList.add("hidden"); skillsContainer.classList.remove("hidden"); }, 800);
     }
 
-    function renderFeed(skillsArray) {
+    async function renderFeed(skillsArray) {
         // Filter out user's own skills - only show other people's skills
         const otherSkills = skillsArray.filter(item => item.email !== currentUserProfile.email);
         
@@ -186,22 +204,49 @@ document.addEventListener("DOMContentLoaded", () => {
         if(otherSkills.length === 0) { skillsContainer.classList.add("hidden"); emptyState.classList.remove("hidden"); return; }
         emptyState.classList.add("hidden"); skillsContainer.classList.remove("hidden");
 
-        otherSkills.forEach(item => {
+        for (const item of otherSkills) {
             const card = document.createElement("div"); card.className = "skill-card";
+            
+            // Fetch ratings for this skill
+            let ratingInfo = { averageRating: 0, ratings: [] };
+            try {
+                const response = await fetch(`/api/ratings/${item._id}`);
+                ratingInfo = await response.json();
+            } catch (error) {
+                console.error('Error fetching ratings:', error);
+            }
+            
+            const stars = '★'.repeat(Math.round(ratingInfo.averageRating)) + '☆'.repeat(5 - Math.round(ratingInfo.averageRating));
+            
             card.innerHTML = `
                 <div>
                     <h3>${item.skill}</h3>
                     <p class="instructor">@${item.user}</p>
                     <p class="desc">${item.desc || "Ready to teach this skill."}</p>
+                    <div class="rating-display">
+                        <span class="stars">${stars}</span>
+                        <span class="rating-text">(${ratingInfo.averageRating.toFixed(1)}) - ${ratingInfo.ratings.length} reviews</span>
+                    </div>
                 </div>
             `;
+            
+            const buttonContainer = document.createElement("div");
+            buttonContainer.className = "button-container";
             
             const reqBtn = document.createElement("button");
             reqBtn.textContent = "Request to Learn";
             reqBtn.onclick = () => sendSkillRequest(item);
-            card.appendChild(reqBtn);
+            buttonContainer.appendChild(reqBtn);
+            
+            const rateBtn = document.createElement("button");
+            rateBtn.textContent = "Rate Skill";
+            rateBtn.className = "outline-btn";
+            rateBtn.onclick = () => showRatingModal(item);
+            buttonContainer.appendChild(rateBtn);
+            
+            card.appendChild(buttonContainer);
             skillsContainer.appendChild(card);
-        });
+        }
     }
 
     async function sendSkillRequest(teacherData) {
@@ -324,5 +369,65 @@ document.addEventListener("DOMContentLoaded", () => {
     searchInput.addEventListener("input", (e) => {
         const term = e.target.value.toLowerCase();
         renderFeed(globalSkillsFeed.filter(item => item.skill.toLowerCase().includes(term) || item.user.toLowerCase().includes(term)));
+    });
+
+    // --- RATING SYSTEM ---
+    const ratingModal = document.getElementById("rating-modal");
+    const ratingForm = document.getElementById("rating-form");
+    const closeRatingBtn = document.getElementById("close-rating-btn");
+    const ratingStars = document.querySelectorAll(".star");
+    let currentRatingSkill = null;
+    let selectedRating = 0;
+
+    function showRatingModal(skill) {
+        currentRatingSkill = skill;
+        selectedRating = 0;
+        ratingStars.forEach(star => star.textContent = '☆');
+        document.getElementById("rating-comment").value = "";
+        ratingModal.classList.remove("hidden");
+    }
+
+    ratingStars.forEach(star => {
+        star.addEventListener("click", () => {
+            selectedRating = parseInt(star.dataset.rating);
+            ratingStars.forEach((s, index) => {
+                s.textContent = index < selectedRating ? '★' : '☆';
+            });
+        });
+    });
+
+    closeRatingBtn.addEventListener("click", () => ratingModal.classList.add("hidden"));
+
+    ratingForm.addEventListener("submit", async (e) => {
+        e.preventDefault();
+        if (!token) return alert("Please login first");
+        if (selectedRating === 0) return alert("Please select a rating");
+
+        const comment = document.getElementById("rating-comment").value;
+
+        try {
+            const response = await fetch('/api/rate', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify({
+                    skillId: currentRatingSkill._id,
+                    rating: selectedRating,
+                    comment: comment
+                })
+            });
+
+            if (response.ok) {
+                alert("Rating submitted successfully!");
+                ratingModal.classList.add("hidden");
+                loadDashboardFeed(); // Refresh to show updated ratings
+            } else {
+                alert("Failed to submit rating");
+            }
+        } catch (error) {
+            alert("Error submitting rating");
+        }
     });
 });

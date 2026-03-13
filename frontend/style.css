@@ -107,3 +107,18 @@ input:focus { border-color: var(--neon-cyan); box-shadow: 0 0 10px rgba(0, 242, 
 .badge.pending { background: rgba(241, 196, 15, 0.1); color: #f1c40f; border: 1px solid #f1c40f; }
 .badge.accepted { background: rgba(46, 204, 113, 0.1); color: #2ecc71; border: 1px solid #2ecc71; }
 .badge.declined { background: rgba(231, 76, 60, 0.1); color: #e74c3c; border: 1px solid #e74c3c; }
+
+/* Rating System Styles */
+.rating-display { margin-top: 8px; display: flex; align-items: center; gap: 8px; }
+.stars { color: #ffd700; font-size: 1.1rem; }
+.rating-text { font-size: 0.8rem; color: var(--text-muted); }
+
+.button-container { display: flex; gap: 10px; margin-top: 15px; }
+.button-container button { flex: 1; }
+
+.rating-stars { display: flex; justify-content: center; gap: 5px; margin-bottom: 15px; }
+.star { font-size: 2rem; color: #ddd; cursor: pointer; transition: color 0.2s; }
+.star:hover, .star.active { color: #ffd700; }
+
+#rating-comment { width: 100%; padding: 10px; background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 8px; color: white; resize: vertical; }
+#rating-comment:focus { border-color: var(--neon-cyan); box-shadow: 0 0 10px rgba(0, 242, 254, 0.2); }

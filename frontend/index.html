@@ -120,6 +120,26 @@
         </div>
     </div>
 
+    <div id="rating-modal" class="modal-overlay hidden">
+        <div class="glass-container modal-content">
+            <h2 class="section-title">Rate Skill</h2>
+            <form id="rating-form">
+                <div class="rating-stars">
+                    <span class="star" data-rating="1">☆</span>
+                    <span class="star" data-rating="2">☆</span>
+                    <span class="star" data-rating="3">☆</span>
+                    <span class="star" data-rating="4">☆</span>
+                    <span class="star" data-rating="5">☆</span>
+                </div>
+                <div class="input-group">
+                    <textarea id="rating-comment" placeholder="Leave a comment (optional)" rows="3"></textarea>
+                </div>
+                <button type="submit" class="neon-btn full-width">Submit Rating</button>
+                <button type="button" class="outline-btn mt-20 full-width" id="close-rating-btn">Cancel</button>
+            </form>
+        </div>
+    </div>
+
     <div id="edit-profile-modal" class="modal-overlay hidden">
         <div class="glass-container modal-content">
             <h2 class="section-title">Edit Profile</h2>
@@ -133,6 +153,7 @@
         </div>
     </div>
 
+    <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
     <script src="app.js"></script>
 </body>
 </html>
