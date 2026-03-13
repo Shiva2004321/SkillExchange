@@ -1,4 +1,6 @@
 require('dotenv').config();
+console.log('🚀 Server script starting...');
+
 const express = require('express');
 const cors = require('cors');
 const nodemailer = require('nodemailer');
@@ -761,6 +763,7 @@ app.post('/api/upload-avatar', authenticateToken, upload.single('avatar'), async
 
 // use environment port (Render sets PORT) or fallback to 5050
 const PORT = process.env.PORT || 5050;
+console.log('📡 About to listen on port:', PORT);
 
 // serve the frontend when deployed
 app.use(express.static(path.join(__dirname, '../frontend')));
