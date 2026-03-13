@@ -52,11 +52,11 @@ input:focus { border-color: var(--neon-cyan); box-shadow: 0 0 10px rgba(0, 242, 
 .nav-left { display: flex; align-items: center; gap: 15px; }
 .avatar-container { cursor: pointer; position: relative; }
 .avatar-circle {
-    width: 40px; height: 40px; border-radius: 50%; background: linear-gradient(135deg, var(--neon-purple), var(--neon-cyan));
+    width: 40px; height: 40px; border-radius: 50%; aspect-ratio: 1 / 1; line-height: 1; background: linear-gradient(135deg, var(--neon-purple), var(--neon-cyan));
     display: flex; align-items: center; justify-content: center; font-weight: bold; color: #000; font-size: 1.2rem; box-shadow: 0 0 10px rgba(0, 242, 254, 0.3); transition: transform 0.3s;
 }
 .avatar-container:hover .avatar-circle { transform: scale(1.05); box-shadow: 0 0 15px rgba(0, 242, 254, 0.6); }
-.avatar-circle.large { width: 60px; height: 60px; font-size: 1.8rem; margin-bottom: 10px; }
+.avatar-circle.large { width: 60px; height: 60px; aspect-ratio: 1 / 1; font-size: 1.8rem; margin-bottom: 10px; }
 .nav-center { flex: 1; max-width: 500px; margin: 0 20px; }
 .search-bar { width: 100%; padding: 10px 20px; border-radius: 30px; background: rgba(255, 255, 255, 0.05); text-align: center; }
 .search-bar:focus { text-align: left; }
